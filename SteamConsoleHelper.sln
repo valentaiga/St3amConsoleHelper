@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamConsoleHelper", "SteamConsoleHelper\SteamConsoleHelper.csproj", "{7C990085-BD59-4322-95A0-94577C4655FF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{101D7C07-2AAE-445B-AA92-EA0F799CB55C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C990085-BD59-4322-95A0-94577C4655FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C990085-BD59-4322-95A0-94577C4655FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C990085-BD59-4322-95A0-94577C4655FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C990085-BD59-4322-95A0-94577C4655FF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8CDF1AC2-F42C-4BA7-9D61-C2AE62D945E1}
+	EndGlobalSection
+EndGlobal
