@@ -4,18 +4,23 @@ namespace SteamConsoleHelper.Exceptions
 {
     public class InternalException : Exception
     {
-        public InternalException(InternalError exceptionType) : base(exceptionType.ToString())
+        public InternalError Error { get; }
+
+        public InternalException(InternalError exceptionType) 
+            : base(exceptionType.ToString())
+        {
+            Error = exceptionType;
+        }
+
+        public InternalException(InternalError exceptionType, Exception exception) 
+            : this(exceptionType, exception.ToString())
         {
         }
 
-        public InternalException(Exception exception, InternalError exceptionType) : base(
-            $"{exceptionType}: {exception.Message}")
+        public InternalException(InternalError exceptionType, string exceptionMessage) 
+            : base($"{exceptionType}: {exceptionMessage}")
         {
-        }
-
-        public InternalException(string exceptionMessage, InternalError exceptionType) : base(
-            $"{exceptionType}: {exceptionMessage}")
-        {
+            Error = exceptionType;
         }
     }
 }

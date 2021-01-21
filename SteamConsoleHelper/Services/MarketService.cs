@@ -60,21 +60,15 @@ namespace SteamConsoleHelper.Services
                 item.ContextId,
                 price);
 
-            //  steam has no api to get current listings with prices
-            //      but steam has request with actual not sold items https://steamcommunity.com/market/mylistings?count=100
-            //  todo: store in cache item with price and fetch it to check expensive items on market (with not lowest price)
             await _requestService.PostRequestAsync<SteamResponseBase>(url, data);
             await _localCacheService.AddSentItemToMarketToCacheAsync(item, price);
             Console.WriteLine($"{nameof(MarketService)}: Sent sell request for assetId:'{item.AssetId}' with price '{price}'");
         }
 
-        public async Task RemoveItemFromListing(uint listingId)
+        public async Task RemoveItemFromListing(ulong listingId)
         {
             var url = _steamUrlService.RemoveListingUrl(listingId);
-            var data = new RemoveListingPostModel
-            {
-                SessionId = _profileSettings.PrivateTokens.SessionId
-            };
+            var data = new RemoveListingPostModel(_profileSettings.PrivateTokens.SessionId);
 
             await _requestService.PostRequestAsync(url, data);
             Console.WriteLine($"{nameof(MarketService)}: Removed listing from market");
@@ -87,7 +81,7 @@ namespace SteamConsoleHelper.Services
 
             var response = await _requestService.GetRequestAsync<MyListingsResponseModel>(url);
             var responses = new List<MyListingsResponseModel> { response };
-            
+
             while (!response.IsTheEnd)
             {
                 offset += 100;
@@ -97,9 +91,20 @@ namespace SteamConsoleHelper.Services
                 responses.Add(response);
             }
 
-            return responses.SelectMany(x => x.Assets)
-                .Select(x => x.ToModel())
-                .ToList();
+            var result = new List<MarketListing>();
+
+            foreach (var resp in responses)
+            {
+                var hovers = ParseHelper.ParseListingHover(resp.Hovers);
+
+                var listings = resp.Assets.Zip(hovers)
+                    .Select(x => x.First.ToModel(x.Second))
+                    .ToList();
+
+                result.AddRange(listings);
+            }
+
+            return result;
         }
     }
 }

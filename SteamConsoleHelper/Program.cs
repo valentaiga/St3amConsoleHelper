@@ -42,6 +42,7 @@ namespace SteamConsoleHelper
                 {
                     services
                         .AddSingleton<StoreService>()
+                        .AddSingleton<LocalCacheService>()
                         .AddSingleton<ProfileSettings>()
                         .AddTransient<SteamUrlService>()
                         .AddTransient<WebRequestService>()
@@ -57,34 +58,11 @@ namespace SteamConsoleHelper
                         // job services
                         .AddSingleton<JobManager>()
                         .AddHostedService<DelayedExecutionService>()
+                        .AddHostedService<HealthCheckService>()
                         // jobs
                         .AddHostedService<CheckMarketPriceJob>()
-                        .AddHostedService<SellMarketableItemsJob>()
-                        .AddHostedService<UnpackBoosterPacksJob>();
+                        .AddHostedService<UnpackBoosterPacksJob>()
+                        .AddHostedService<SellMarketableItemsJob>();
                 });
-
-
-        private static ServiceProvider ConfigureServices()
-        {
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables()
-                .Build() as IConfiguration;
-
-            return new ServiceCollection()
-                .AddSingleton(configuration)
-                .AddSingleton<StoreService>()
-                .AddSingleton<ProfileSettings>()
-                .AddTransient<SteamUrlService>()
-                .AddTransient<WebRequestService>()
-                .AddSingleton<SteamUrlService>()
-                .AddSingleton<HttpClientFactory>()
-
-                .AddSingleton<DelayedExecutionPool>()
-                .AddSingleton<DelayedExecutionService>()
-                .AddTransient<InventoryService>()
-                .AddTransient<BoosterPackService>()
-                .BuildServiceProvider();
-        }
     }
 }

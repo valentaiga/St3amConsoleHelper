@@ -29,6 +29,23 @@ namespace SteamConsoleHelper.Common
             _httpClientFactory = httpClientFactory;
         }
 
+        public async Task GetRequestAsync(string url, IEnumerable<(string name, string value)> parameters = null)
+        {
+            var getUrl = url;
+
+            if (parameters != null && parameters.Any())
+            {
+                getUrl += "?" + string.Join("&", parameters.Select(x => $"{x.name}={x.value}"));
+            }
+
+            using var httpClient = await _httpClientFactory.CreateAsync();
+            var response = await httpClient.GetAsync(getUrl);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InternalException(InternalError.RequestBadRequest);
+            }
+        }
 
         public async Task<T> GetRequestAsync<T>(string url, IEnumerable<(string name, string value)> parameters = null)
             where T : SteamResponseBase
@@ -42,7 +59,7 @@ namespace SteamConsoleHelper.Common
 
             using var httpClient = await _httpClientFactory.CreateAsync();
             var response = await httpClient.GetAsync(getUrl);
-
+            
             return await DeserializeResponseAsync<T>(response);
         }
 
@@ -105,16 +122,22 @@ namespace SteamConsoleHelper.Common
                     throw new InternalException(InternalError.FailedToDeserializeResponse);
                 }
 
-                if (result.Success != 1)
+                if (!result.Success)
                 {
-                    throw new InternalException(result.ErrorMessage, InternalError.FailActionResult);
+                    throw new InternalException(InternalError.FailActionResult, result.ErrorMessage);
                 }
 
                 return result;
             }
+            catch (InternalException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
-                throw new InternalException(e, InternalError.FailedToDeserializeResponse);
+                var text = $"responseText: '{responseText}'; {e}";
+                Console.WriteLine(text);
+                throw new InternalException(InternalError.FailedToDeserializeResponse, text);
             }
         }
     }

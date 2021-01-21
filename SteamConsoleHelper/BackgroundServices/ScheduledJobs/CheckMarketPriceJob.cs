@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using SteamConsoleHelper.Abstractions.Cache;
@@ -26,10 +27,10 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             _marketService = marketService;
             _delayedExecutionPool = delayedExecutionPool;
 
-            JobExecuteDelay = TimeSpan.FromHours(12);
+            JobExecuteDelay = TimeSpan.FromHours(1);
         }
 
-        public override async Task DoWorkAsync()
+        public override async Task DoWorkAsync(CancellationToken cancellationToken)
         {
             // todo: add to cache model 'DateTime:sentToMarketTime' and ignore all listings earlier than 3 days
             var notSoldItems = await GetNotSoldItemsAsync();
@@ -47,9 +48,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                 {
                     _delayedExecutionPool.EnqueueRequestToPool(async () =>
                     {
-                        // todo: parse listingId from response
-                        var listingId = (uint) 1239452325;
-                        await _marketService.RemoveItemFromListing(listingId);
+                        await _marketService.RemoveItemFromListing(notSoldItem.listing.ListingId);
                     });
                 }
             }
@@ -61,8 +60,14 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             var sentToMarketItems = await _cacheService.GetCachedSentItemsToMarket();
 
             var mappedListings = InventoryHelper.MapPrices(sentToMarketItems, marketListings);
-            
-            var soldItems = mappedListings.FindAll(x => x.listing != null);
+
+            // filter:
+            // 1. already sold items
+            // 2. items older than 3 days
+            var maximumDateForCheck = DateTime.UtcNow.AddDays(-3);
+            var soldItems = mappedListings
+                .FindAll(x => x.listing != null)
+                .FindAll(x => x.itemWithPrice.SellTime < maximumDateForCheck);
             foreach (var soldItem in soldItems)
             {
                 await _cacheService.RemoveSentItemToMarketFromCacheAsync(

@@ -25,11 +25,11 @@ namespace SteamConsoleHelper.Helpers
             List<InventoryDescriptionResponseModel> descriptions)
         {
             var result = new List<(InventoryAssetResponseModel, InventoryDescriptionResponseModel)>();
-            var lookup = descriptions.ToLookup(x => x.InstanceId);
+            var lookup = descriptions.ToLookup(x => x.ClassId);
 
             foreach (var asset in assets)
             {
-                var description = lookup[asset.InstanceId].First(x => x.ClassId == asset.ClassId);
+                var description = lookup[asset.ClassId].First(x => x.InstanceId == asset.InstanceId);
                 result.Add((asset, description));
             }
 
@@ -40,13 +40,16 @@ namespace SteamConsoleHelper.Helpers
             List<ItemWithPrice> marketPrices,
             List<MarketListing> listings)
         {
+            // todo: parse html tag too and get prices from it
+            // code below works only with active cache
+            // but if item was sold manually it wont find it
             var result = new List<(ItemWithPrice, MarketListing)>();
-            var lookup = listings.ToLookup(x => x.InstanceId);
+            var lookup = listings.ToLookup(x => x.ClassId);
 
             foreach (var itemWithPrice in marketPrices)
             {
-                var asset = lookup[itemWithPrice.Item.InstanceId]
-                    .FirstOrDefault(x => x.ClassId == itemWithPrice.Item.ClassId);
+                var asset = lookup[itemWithPrice.Item.ClassId]
+                    .FirstOrDefault(x => x.AssetId == itemWithPrice.Item.AssetId);
 
                 result.Add((itemWithPrice, asset));
             }

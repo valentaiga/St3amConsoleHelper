@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 
 namespace SteamConsoleHelper.BackgroundServices
 {
     public class DelayedExecutionPool
     {
-        private static readonly TimeSpan DefaultOnFailureDelay = TimeSpan.FromSeconds(0.5);
-        
         private readonly ConcurrentQueue<Action> _actionsQueue;
 
         public DelayedExecutionPool()
@@ -26,8 +23,7 @@ namespace SteamConsoleHelper.BackgroundServices
             
             Console.WriteLine($"{nameof(DelayedExecutionPool)}: '{_actionsQueue.Count}' more actions in queue");
 
-            return success ? action : async () => await Task.Delay(DefaultOnFailureDelay);
+            return success ? action : null;
         }
-            
     }
 }

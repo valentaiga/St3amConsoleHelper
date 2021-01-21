@@ -19,6 +19,9 @@ namespace SteamConsoleHelper.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            // initial launch delay
+            await Task.Delay(ExecutionDelay, stoppingToken);
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 var action = _requestPool.DequeueRequestFromPool();

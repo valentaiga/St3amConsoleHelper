@@ -19,7 +19,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
         }
         
         // todo: check my market slots with high price every 30 minutes
-        public abstract Task DoWorkAsync();
+        public abstract Task DoWorkAsync(CancellationToken cancellationToken);
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
@@ -31,7 +31,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                     _isExecutedEarlier = true;
                 }
 
-                await DoWorkAsync();
+                await DoWorkAsync(cancellationToken);
                 await Task.Delay(JobExecuteDelay, cancellationToken);
             }
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using SteamConsoleHelper.Abstractions.Enums;
@@ -11,7 +12,6 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 {
     public class SellMarketableItemsJob : ScheduledJobBase
     {
-
         private readonly InventoryService _inventoryService;
         private readonly MarketService _marketService;
         private readonly DelayedExecutionPool _delayedExecutionPool;
@@ -26,7 +26,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             JobExecuteDelay = TimeSpan.FromHours(1);
         }
 
-        public override async Task DoWorkAsync()
+        public override async Task DoWorkAsync(CancellationToken cancellationToken)
         {
             var inventoryItems = await _inventoryService.GetInventoryAsync();
 

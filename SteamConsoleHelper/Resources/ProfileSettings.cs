@@ -44,6 +44,7 @@ namespace SteamConsoleHelper.Resources
             public string SessionId { get; }
 
             public string SteamLoginSecure { get; }
+            
             public PrivateInformation(string sessionId, string steamLoginSecure)
                 => (SessionId, SteamLoginSecure) = (sessionId, steamLoginSecure);
         }

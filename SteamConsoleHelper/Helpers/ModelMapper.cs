@@ -12,7 +12,6 @@ namespace SteamConsoleHelper.Helpers
 {
     public static class ModelMapper
     {
-        private static readonly Regex NotDigitsRegex = new Regex(@"[^0-9]+");
         private static readonly Regex PriceRegex = new Regex(@"([0-9])+(,)?([0-9]{0,2})");
 
         public static ItemMarketPrice ToModel(this ItemPriceResponseModel response, uint appId, string hashName)
@@ -21,7 +20,7 @@ namespace SteamConsoleHelper.Helpers
             {
                 LowestPrice = ConvertStringToPrice(response.LowestPriceString),
                 MedianPrice = ConvertStringToPrice(response.MedianPriceString),
-                Volume = Convert.ToUInt32(NotDigitsRegex.Replace(response.Volume, string.Empty)),
+                Volume = Convert.ToUInt32(response.Volume.KeepNumbersOnly()),
                 AppId = appId,
                 HashName = hashName
             };
@@ -34,7 +33,7 @@ namespace SteamConsoleHelper.Helpers
                 }
 
                 var stringPrice = PriceRegex.Match(value).Value;
-                var stringPriceNoDot = NotDigitsRegex.Replace(stringPrice, string.Empty);
+                var stringPriceNoDot = stringPrice.KeepNumbersOnly();
 
                 var result = Convert.ToUInt32(stringPriceNoDot);
 
@@ -73,15 +72,15 @@ namespace SteamConsoleHelper.Helpers
             };
         }
 
-        public static MarketListing ToModel(this InventoryAssetResponseModel asset)
+        public static MarketListing ToModel(this ListingAsset asset, ListingHover listingHover)
         {
             return new MarketListing
             {
                 AppId = asset.AppId,
-                AssetId = asset.AssetId,
                 ClassId = asset.ClassId,
                 ContextId = asset.ContextId,
-                InstanceId = asset.InstanceId
+                ListingId = listingHover.ListingId,
+                AssetId = asset.AssetId
             };
         }
 

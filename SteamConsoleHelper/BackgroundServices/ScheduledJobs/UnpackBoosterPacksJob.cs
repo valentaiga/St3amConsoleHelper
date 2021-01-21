@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using SteamConsoleHelper.Abstractions.Enums;
@@ -21,10 +22,10 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             _boosterPackService = boosterPackService;
             _delayedExecutionPool = delayedExecutionPool;
 
-            JobExecuteDelay = TimeSpan.FromHours(6);
+            JobExecuteDelay = TimeSpan.FromHours(1);
         }
 
-        public override async Task DoWorkAsync()
+        public override async Task DoWorkAsync(CancellationToken cancellationToken)
         {
             var inventoryItems = await _inventoryService.GetInventoryAsync();
 
