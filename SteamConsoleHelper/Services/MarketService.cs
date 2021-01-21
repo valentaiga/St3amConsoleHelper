@@ -68,7 +68,6 @@ namespace SteamConsoleHelper.Services
                 price);
 
             await _requestService.PostRequestAsync<SteamResponseBase>(url, data);
-            await _localCacheService.AddSentItemToMarketToCacheAsync(item, price);
             _logger.LogInformation($"Sent to market item '{item.MarketHashName}' assetId: '{item.AssetId}' with price '{price}'");
         }
 
@@ -103,9 +102,10 @@ namespace SteamConsoleHelper.Services
             foreach (var resp in responses)
             {
                 var hovers = ParseHelper.ParseListingHover(resp.Hovers);
+                var descriptions = ParseHelper.ParseHtmlResult(resp.HtmlResult);
 
                 var listings = resp.Assets.Zip(hovers)
-                    .Select(x => x.First.ToModel(x.Second))
+                    .Select(x => x.First.ToModel(x.Second, descriptions.Find(d => d.ListingId == x.Second.ListingId)))
                     .ToList();
 
                 result.AddRange(listings);

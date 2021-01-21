@@ -5,11 +5,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
-using SteamConsoleHelper.Abstractions.Cache;
-using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.Abstractions.Market;
-using SteamConsoleHelper.Extensions;
-using SteamConsoleHelper.Helpers;
 using SteamConsoleHelper.Services;
 
 namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
@@ -20,6 +16,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
     public class CheckMarketPriceJob : ScheduledJobBase
     {
         private static readonly TimeSpan DefaultRequestDelay = TimeSpan.FromSeconds(3);
+        private const uint ExpensivePrice = 100_00;
 
         private readonly ILogger<CheckMarketPriceJob> _logger;
         private readonly LocalCacheService _cacheService;
@@ -51,53 +48,35 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             foreach (var notSoldItem in notSoldItems)
             {
                 await Task.Delay(DefaultRequestDelay, cancellationToken);
+                
+                var lowestMarketPrice = await GetLowestMarketPriceAsync(notSoldItem.AppId, notSoldItem.HashName);
 
-                var myPrice = notSoldItem.itemWithPrice.Price;
-                var lowestMarketPrice = await GetLowestMarketPriceAsync(notSoldItem.itemWithPrice.Item);
-                var calculatedMarketPrice = PriceHelper.CalculateSellerPrice(lowestMarketPrice);
-
-                if (myPrice > calculatedMarketPrice)
+                if (notSoldItem.BuyerPrice > lowestMarketPrice)
                 {
                     _delayedExecutionPool.EnqueueActionToPool(async () =>
                     {
-                        await _marketService.RemoveItemFromListing(notSoldItem.listing.ListingId);
+                        await _marketService.RemoveItemFromListing(notSoldItem.ListingId);
                     });
                 }
             }
         }
 
-        private async Task<List<(ItemWithPrice itemWithPrice, MarketListing listing)>> GetNotSoldItemsAsync()
+        private async Task<List<MarketListing>> GetNotSoldItemsAsync()
         {
             var marketListings = await _marketService.GetAllMyListings();
-            var sentToMarketItems = await _cacheService.GetCachedSentItemsToMarket();
 
-            var mappedListings = InventoryHelper.MapPrices(sentToMarketItems, marketListings);
-
-            // filter:
-            // 1. already sold items
-            // 2. items older than 3 days
+            // filter items older than 3 days OR price is too hugh and it needed to be change now 
             var maximumDateForCheck = DateTime.UtcNow.AddDays(-3);
-            var itemsOnMarket = mappedListings
-                .FindAll(x => x.listing != null)
-                .FindAll(x => x.itemWithPrice.SellTime < maximumDateForCheck);
-            _logger.LogDebug($"Total '{itemsOnMarket.Count}' items on market older than 3 days");
-
-            foreach (var soldItem in itemsOnMarket)
-            {
-                // why i did this?
-                await _cacheService.RemoveSentItemToMarketFromCacheAsync(
-                    soldItem.itemWithPrice.Item,
-                    soldItem.itemWithPrice.Price);
-            }
-
-            var notSoldItems = mappedListings.FindAll(x => x.listing != null);
-
-            return notSoldItems;
+            var result = marketListings
+                .FindAll(x => x.SellDate < maximumDateForCheck || x.SellerPrice > ExpensivePrice);
+            _logger.LogDebug($"Total '{result.Count}' items on market older than 3 days or price > 100 rubles");
+            
+            return result;
         }
 
-        private async Task<uint?> GetLowestMarketPriceAsync(InventoryItem item)
+        private async Task<uint?> GetLowestMarketPriceAsync(uint appId, string hashName)
         {
-            var itemPrice = await _marketService.GetItemPriceAsync(item);
+            var itemPrice = await _marketService.GetItemPriceAsync(appId, hashName);
             return itemPrice.LowestPrice;
         }
     }

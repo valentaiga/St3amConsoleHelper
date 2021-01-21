@@ -7,6 +7,7 @@ using SteamConsoleHelper.Abstractions.Market;
 using SteamConsoleHelper.ApiModels.Responses.BoosterPack;
 using SteamConsoleHelper.ApiModels.Responses.Inventory;
 using SteamConsoleHelper.ApiModels.Responses.Market;
+using SteamConsoleHelper.Extensions;
 
 namespace SteamConsoleHelper.Helpers
 {
@@ -20,7 +21,7 @@ namespace SteamConsoleHelper.Helpers
             {
                 LowestPrice = ConvertStringToPrice(response.LowestPriceString),
                 MedianPrice = ConvertStringToPrice(response.MedianPriceString),
-                Volume = Convert.ToUInt32(response.Volume.KeepNumbersOnly()),
+                Volume = response.Volume.KeepNumbersOnly().ToUInt(),
                 AppId = appId,
                 HashName = hashName
             };
@@ -33,9 +34,8 @@ namespace SteamConsoleHelper.Helpers
                 }
 
                 var stringPrice = PriceRegex.Match(value).Value;
-                var stringPriceNoDot = stringPrice.KeepNumbersOnly();
 
-                var result = Convert.ToUInt32(stringPriceNoDot);
+                var result = stringPrice.KeepNumbersOnly().ToUInt();
 
                 if (!value.Contains(','))
                 {
@@ -72,15 +72,19 @@ namespace SteamConsoleHelper.Helpers
             };
         }
 
-        public static MarketListing ToModel(this ListingAsset asset, ListingHover listingHover)
+        public static MarketListing ToModel(this ListingAsset asset, ListingHover listingHover, ListingDescription listingDescription)
         {
             return new MarketListing
             {
+                ListingId = listingHover.ListingId,
+                AssetId = asset.AssetId,
                 AppId = asset.AppId,
                 ClassId = asset.ClassId,
                 ContextId = asset.ContextId,
-                ListingId = listingHover.ListingId,
-                AssetId = asset.AssetId
+                SellerPrice = listingDescription.SellerPrice,
+                BuyerPrice = listingDescription.BuyerPrice,
+                SellDate = listingDescription.MarketSellDate,
+                HashName = listingDescription.HashName
             };
         }
 

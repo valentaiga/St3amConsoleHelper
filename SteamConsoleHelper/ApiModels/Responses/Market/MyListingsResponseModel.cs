@@ -3,8 +3,6 @@ using System.Linq;
 
 using Newtonsoft.Json;
 
-using SteamConsoleHelper.ApiModels.Responses.Inventory;
-
 namespace SteamConsoleHelper.ApiModels.Responses.Market
 {
     public class MyListingsResponseModel : SteamResponseBase
@@ -21,6 +19,9 @@ namespace SteamConsoleHelper.ApiModels.Responses.Market
         public uint Offset { get; set; }
 
         public string Hovers { get; set; }
+
+        [JsonProperty("results_html")]
+        public string HtmlResult { get; set; }
 
         [JsonIgnore]
         public List<ListingAsset> Assets

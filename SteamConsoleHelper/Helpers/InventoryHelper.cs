@@ -35,26 +35,5 @@ namespace SteamConsoleHelper.Helpers
 
             return result;
         }
-
-        public static List<(ItemWithPrice itemWithPrice, MarketListing listing)> MapPrices(
-            List<ItemWithPrice> marketPrices,
-            List<MarketListing> listings)
-        {
-            // todo: parse html tag too and get prices from it
-            // code below works only with active cache
-            // but if item was sold manually it wont find it
-            var result = new List<(ItemWithPrice, MarketListing)>();
-            var lookup = listings.ToLookup(x => x.ClassId);
-
-            foreach (var itemWithPrice in marketPrices)
-            {
-                var asset = lookup[itemWithPrice.Item.ClassId]
-                    .FirstOrDefault(x => x.AssetId == itemWithPrice.Item.AssetId);
-
-                result.Add((itemWithPrice, asset));
-            }
-
-            return result;
-        }
     }
 }

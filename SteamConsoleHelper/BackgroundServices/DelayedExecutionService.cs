@@ -8,7 +8,7 @@ namespace SteamConsoleHelper.BackgroundServices
 {
     public class DelayedExecutionService : BackgroundService
     {
-        private static readonly TimeSpan ExecutionDelay = TimeSpan.FromSeconds(4);
+        private static readonly TimeSpan ExecutionDelay = TimeSpan.FromSeconds(5);
 
         private readonly DelayedExecutionPool _requestPool;
 
