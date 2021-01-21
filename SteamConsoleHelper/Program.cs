@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using Serilog;
-using Serilog.Events;
+
 using SteamConsoleHelper.BackgroundServices;
 using SteamConsoleHelper.BackgroundServices.ScheduledJobs;
 using SteamConsoleHelper.Common;
@@ -25,8 +27,6 @@ namespace SteamConsoleHelper
         {
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(Configuration)
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Information)
                 .CreateLogger();
 
             try
