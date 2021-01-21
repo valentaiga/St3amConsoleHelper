@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using SteamConsoleHelper.Abstractions.Cache;
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.Abstractions.Market;
@@ -12,22 +14,32 @@ using SteamConsoleHelper.Services;
 
 namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 {
+    /// <summary>
+    /// Job for removing more expensive items from market
+    /// </summary>
     public class CheckMarketPriceJob : ScheduledJobBase
     {
         private static readonly TimeSpan DefaultRequestDelay = TimeSpan.FromSeconds(3);
 
+        private readonly ILogger<CheckMarketPriceJob> _logger;
         private readonly LocalCacheService _cacheService;
         private readonly MarketService _marketService;
         private readonly DelayedExecutionPool _delayedExecutionPool;
 
-        public CheckMarketPriceJob(LocalCacheService cacheService, MarketService marketService, DelayedExecutionPool delayedExecutionPool, JobManager jobManager)
+        public CheckMarketPriceJob(
+            ILogger<CheckMarketPriceJob> logger,
+            LocalCacheService cacheService,
+            MarketService marketService,
+            DelayedExecutionPool delayedExecutionPool,
+            JobManager jobManager)
             : base(jobManager)
         {
+            _logger = logger;
             _cacheService = cacheService;
             _marketService = marketService;
             _delayedExecutionPool = delayedExecutionPool;
 
-            JobExecuteDelay = TimeSpan.FromHours(1);
+            JobExecuteDelay = TimeSpan.FromMinutes(15);
         }
 
         public override async Task DoWorkAsync(CancellationToken cancellationToken)
@@ -38,7 +50,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             // todo: move some constants to GlobalSettings.cs (like timespan with default delay)
             foreach (var notSoldItem in notSoldItems)
             {
-                await Task.Delay(DefaultRequestDelay);
+                await Task.Delay(DefaultRequestDelay, cancellationToken);
 
                 var myPrice = notSoldItem.itemWithPrice.Price;
                 var lowestMarketPrice = await GetLowestMarketPriceAsync(notSoldItem.itemWithPrice.Item);
@@ -46,7 +58,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
                 if (myPrice > calculatedMarketPrice)
                 {
-                    _delayedExecutionPool.EnqueueRequestToPool(async () =>
+                    _delayedExecutionPool.EnqueueActionToPool(async () =>
                     {
                         await _marketService.RemoveItemFromListing(notSoldItem.listing.ListingId);
                     });
@@ -65,11 +77,14 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             // 1. already sold items
             // 2. items older than 3 days
             var maximumDateForCheck = DateTime.UtcNow.AddDays(-3);
-            var soldItems = mappedListings
+            var itemsOnMarket = mappedListings
                 .FindAll(x => x.listing != null)
                 .FindAll(x => x.itemWithPrice.SellTime < maximumDateForCheck);
-            foreach (var soldItem in soldItems)
+            _logger.LogDebug($"Total '{itemsOnMarket.Count}' items on market older than 3 days");
+
+            foreach (var soldItem in itemsOnMarket)
             {
+                // why i did this?
                 await _cacheService.RemoveSentItemToMarketFromCacheAsync(
                     soldItem.itemWithPrice.Item,
                     soldItem.itemWithPrice.Price);

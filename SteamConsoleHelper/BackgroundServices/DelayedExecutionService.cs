@@ -24,7 +24,7 @@ namespace SteamConsoleHelper.BackgroundServices
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var action = _requestPool.DequeueRequestFromPool();
+                var action = _requestPool.DequeueActionFromPool();
 
                 action?.Invoke();
 

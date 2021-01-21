@@ -12,7 +12,7 @@ namespace SteamConsoleHelper.Common
         private const string GetInventoryBaseUrl = "https://steamcommunity.com/inventory/{0}/753/6?l=english&count=5000";
         private const string SellItemBaseUrl = "https://steamcommunity.com/market/sellitem/";
         private const string GetItemPriceBaseUrl = "https://steamcommunity.com/market/priceoverview/?appid={0}&country=RU&currency=5&market_hash_name={1}";
-        private const string GetMarketListingsBaseUrl = "https://steamcommunity.com/market/mylistings?count=100&start={0}";
+        private const string GetMarketListingsBaseUrl = "https://steamcommunity.com/market/mylistings?count=100&start={0}&l=english";
         private const string RemoveListingBaseUrl = "https://steamcommunity.com/market/removelisting/{0}";
         private const string GetNotificationsCountBaseUrl = "https://steamcommunity.com/actions/GetNotificationCounts";
 

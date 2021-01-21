@@ -4,6 +4,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -16,6 +18,7 @@ namespace SteamConsoleHelper.Common
     // ReSharper disable PossibleNullReferenceException
     public class WebRequestService
     {
+        private readonly ILogger<WebRequestService> _logger;
         private readonly HttpClientFactory _httpClientFactory;
 
         private static readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
@@ -24,8 +27,9 @@ namespace SteamConsoleHelper.Common
             Formatting = Formatting.Indented
         };
 
-        public WebRequestService(HttpClientFactory httpClientFactory)
+        public WebRequestService(ILogger<WebRequestService> logger, HttpClientFactory httpClientFactory)
         {
+            _logger = logger;
             _httpClientFactory = httpClientFactory;
         }
 
@@ -41,6 +45,7 @@ namespace SteamConsoleHelper.Common
             using var httpClient = await _httpClientFactory.CreateAsync();
             var response = await httpClient.GetAsync(getUrl);
 
+            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}'");
             if (!response.IsSuccessStatusCode)
             {
                 throw new InternalException(InternalError.RequestBadRequest);
@@ -59,7 +64,8 @@ namespace SteamConsoleHelper.Common
 
             using var httpClient = await _httpClientFactory.CreateAsync();
             var response = await httpClient.GetAsync(getUrl);
-            
+
+            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{getUrl}'");
             return await DeserializeResponseAsync<T>(response);
         }
 
@@ -70,6 +76,7 @@ namespace SteamConsoleHelper.Common
 
             using var httpClient = await _httpClientFactory.CreateAsync();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
+            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{url}'");
 
             return await DeserializeResponseAsync<T>(response);
 
@@ -88,6 +95,7 @@ namespace SteamConsoleHelper.Common
 
             using var httpClient = await _httpClientFactory.CreateAsync();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
+            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{url}'");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -103,7 +111,7 @@ namespace SteamConsoleHelper.Common
             }
         }
 
-        private static async Task<T> DeserializeResponseAsync<T>(HttpResponseMessage response)
+        private async Task<T> DeserializeResponseAsync<T>(HttpResponseMessage response)
         where T : SteamResponseBase
         {
             if (!response.IsSuccessStatusCode)
@@ -135,9 +143,9 @@ namespace SteamConsoleHelper.Common
             }
             catch (Exception e)
             {
-                var text = $"responseText: '{responseText}'; {e}";
-                Console.WriteLine(text);
-                throw new InternalException(InternalError.FailedToDeserializeResponse, text);
+                var errorText = e.ToString();
+                _logger.LogError(errorText);
+                throw new InternalException(InternalError.FailedToDeserializeResponse, errorText);
             }
         }
     }

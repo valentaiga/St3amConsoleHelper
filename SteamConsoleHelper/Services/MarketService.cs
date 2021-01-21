@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Logging;
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.Abstractions.Market;
 using SteamConsoleHelper.ApiModels.Requests;
@@ -17,13 +17,20 @@ namespace SteamConsoleHelper.Services
 {
     public class MarketService
     {
+        private readonly ILogger<MarketService> _logger;
         private readonly WebRequestService _requestService;
         private readonly SteamUrlService _steamUrlService;
         private readonly ProfileSettings _profileSettings;
         private readonly LocalCacheService _localCacheService;
 
-        public MarketService(WebRequestService requestService, SteamUrlService steamUrlService, ProfileSettings profileSettings, LocalCacheService localCacheService)
+        public MarketService(
+            ILogger<MarketService> logger,
+            WebRequestService requestService, 
+            SteamUrlService steamUrlService, 
+            ProfileSettings profileSettings, 
+            LocalCacheService localCacheService)
         {
+            _logger = logger;
             _requestService = requestService;
             _steamUrlService = steamUrlService;
             _profileSettings = profileSettings;
@@ -39,7 +46,7 @@ namespace SteamConsoleHelper.Services
 
             var response = await _requestService.GetRequestAsync<ItemPriceResponseModel>(url);
 
-            Console.WriteLine($"{nameof(MarketService)}: Got lowest price '{response.LowestPriceString}' for '{hashName}'");
+            _logger.LogDebug($"Got lowest price '{response.LowestPriceString}' for '{hashName}'");
 
             return response.ToModel(appId, hashName);
         }
@@ -62,7 +69,7 @@ namespace SteamConsoleHelper.Services
 
             await _requestService.PostRequestAsync<SteamResponseBase>(url, data);
             await _localCacheService.AddSentItemToMarketToCacheAsync(item, price);
-            Console.WriteLine($"{nameof(MarketService)}: Sent sell request for assetId:'{item.AssetId}' with price '{price}'");
+            _logger.LogInformation($"Sent to market item '{item.MarketHashName}' assetId: '{item.AssetId}' with price '{price}'");
         }
 
         public async Task RemoveItemFromListing(ulong listingId)
@@ -71,7 +78,7 @@ namespace SteamConsoleHelper.Services
             var data = new RemoveListingPostModel(_profileSettings.PrivateTokens.SessionId);
 
             await _requestService.PostRequestAsync(url, data);
-            Console.WriteLine($"{nameof(MarketService)}: Removed listing from market");
+            _logger.LogInformation($"Removed listing from market assetId '{listingId}'");
         }
 
         public async Task<List<MarketListing>> GetAllMyListings()
@@ -103,6 +110,8 @@ namespace SteamConsoleHelper.Services
 
                 result.AddRange(listings);
             }
+
+            _logger.LogInformation($"Total '{result.Count}' items on market");
 
             return result;
         }

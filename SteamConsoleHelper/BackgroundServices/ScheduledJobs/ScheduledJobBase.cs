@@ -18,7 +18,6 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             _firstExecuteDelay = jobManager.GetDelayBeforeFirstJobRun();
         }
         
-        // todo: check my market slots with high price every 30 minutes
         public abstract Task DoWorkAsync(CancellationToken cancellationToken);
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)

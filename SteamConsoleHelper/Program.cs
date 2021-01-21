@@ -1,9 +1,10 @@
 ﻿using System;
-
+using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using Serilog;
+using Serilog.Events;
 using SteamConsoleHelper.BackgroundServices;
 using SteamConsoleHelper.BackgroundServices.ScheduledJobs;
 using SteamConsoleHelper.Common;
@@ -14,8 +15,20 @@ namespace SteamConsoleHelper
 {
     class Program
     {
+        private static IConfiguration Configuration { get; } = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables()
+            .Build();
+
         static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(Configuration)
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Information)
+                .CreateLogger();
+
             try
             {
                 CreateHostBuilder(args)
@@ -24,20 +37,17 @@ namespace SteamConsoleHelper
             }
             catch (Exception e)
             {
-                // todo: use serilog instead CW
-                Console.WriteLine(e);
+                Log.Fatal($"Application failed.", e);
+            }
+            finally
+            {
+                Log.CloseAndFlush();
             }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureHostConfiguration(hostBuilder =>
-                {
-                    // todo: fix config, builder cant find it
-                    hostBuilder
-                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                        .AddEnvironmentVariables();
-                })
+                .UseSerilog()
                 .ConfigureServices(services =>
                 {
                     services
