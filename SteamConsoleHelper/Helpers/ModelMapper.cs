@@ -1,6 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Linq;
+
 using SteamConsoleHelper.Abstractions.BoosterPack;
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.Abstractions.Market;
@@ -13,37 +12,16 @@ namespace SteamConsoleHelper.Helpers
 {
     public static class ModelMapper
     {
-        private static readonly Regex PriceRegex = new Regex(@"([0-9])+(,)?([0-9]{0,2})");
-
         public static ItemMarketPrice ToModel(this ItemPriceResponseModel response, uint appId, string hashName)
         {
             return new ItemMarketPrice
             {
-                LowestPrice = ConvertStringToPrice(response.LowestPriceString),
-                MedianPrice = ConvertStringToPrice(response.MedianPriceString),
-                Volume = response.Volume.KeepNumbersOnly().ToUInt(),
+                LowestPrice = ParseHelper.ParsePrice(response.LowestPriceString),
+                MedianPrice = ParseHelper.ParsePrice(response.MedianPriceString),
+                Volume = response.Volume.KeepNumbersOnly()?.ToUInt(),
                 AppId = appId,
                 HashName = hashName
             };
-
-            static uint? ConvertStringToPrice(string value)
-            {
-                if (value == null)
-                {
-                    return null;
-                }
-
-                var stringPrice = PriceRegex.Match(value).Value;
-
-                var result = stringPrice.KeepNumbersOnly().ToUInt();
-
-                if (!value.Contains(','))
-                {
-                    result *= 100;
-                }
-
-                return result;
-            }
         }
 
         public static InventoryItem ToModel(this InventoryAssetResponseModel asset, InventoryDescriptionResponseModel description)

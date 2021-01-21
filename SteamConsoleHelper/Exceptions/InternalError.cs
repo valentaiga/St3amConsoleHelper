@@ -3,7 +3,8 @@
     public enum InternalError
     {
         RequestBadRequest,
-        FailActionResult,
+        SteamServicesAreBusy,
+        UnexpectedError,
         FailedToDeserializeResponse,
         FailedToGetGamesFromCraftList,
         FailedToAddGameToCraftList,

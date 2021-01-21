@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -112,7 +111,7 @@ namespace SteamConsoleHelper.Common
         }
 
         private async Task<T> DeserializeResponseAsync<T>(HttpResponseMessage response)
-        where T : SteamResponseBase
+            where T : SteamResponseBase
         {
             if (!response.IsSuccessStatusCode)
             {
@@ -121,32 +120,19 @@ namespace SteamConsoleHelper.Common
 
             var responseText = await response.Content.ReadAsStringAsync();
 
-            try
-            {
-                var result = JsonConvert.DeserializeObject<T>(responseText, JsonSerializerSettings);
+            var result = JsonConvert.DeserializeObject<T>(responseText, JsonSerializerSettings);
 
-                if (result == null)
-                {
-                    throw new InternalException(InternalError.FailedToDeserializeResponse);
-                }
-
-                if (!result.Success)
-                {
-                    throw new InternalException(InternalError.FailActionResult, result.ErrorMessage);
-                }
-
-                return result;
-            }
-            catch (InternalException)
+            if (result == null)
             {
-                throw;
+                throw new InternalException(InternalError.FailedToDeserializeResponse);
             }
-            catch (Exception e)
+
+            if (!result.Success)
             {
-                var errorText = e.ToString();
-                _logger.LogError(errorText);
-                throw new InternalException(InternalError.FailedToDeserializeResponse, errorText);
+                throw new InternalException(InternalError.SteamServicesAreBusy, result.ErrorMessage);
             }
+
+            return result;
         }
     }
 }

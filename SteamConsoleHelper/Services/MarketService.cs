@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.Logging;
+
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.Abstractions.Market;
 using SteamConsoleHelper.ApiModels.Requests;
 using SteamConsoleHelper.ApiModels.Responses;
 using SteamConsoleHelper.ApiModels.Responses.Market;
 using SteamConsoleHelper.Common;
-using SteamConsoleHelper.Extensions;
 using SteamConsoleHelper.Helpers;
 using SteamConsoleHelper.Resources;
 

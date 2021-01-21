@@ -13,7 +13,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
     /// <summary>
     /// Job for removing more expensive items from market
     /// </summary>
-    public class CheckMarketPriceJob : ScheduledJobBase
+    public class CheckMarketPriceJob : ScheduledJobBase<CheckMarketPriceJob>
     {
         private static readonly TimeSpan DefaultRequestDelay = TimeSpan.FromSeconds(3);
         private const uint ExpensivePrice = 100_00;
@@ -29,7 +29,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             MarketService marketService,
             DelayedExecutionPool delayedExecutionPool,
             JobManager jobManager)
-            : base(jobManager)
+            : base(logger, jobManager)
         {
             _logger = logger;
             _cacheService = cacheService;
@@ -49,6 +49,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             {
                 await Task.Delay(DefaultRequestDelay, cancellationToken);
                 
+                _logger.LogDebug($"listingId: '{notSoldItem.ListingId}' hashName: {notSoldItem.HashName}");
                 var lowestMarketPrice = await GetLowestMarketPriceAsync(notSoldItem.AppId, notSoldItem.HashName);
 
                 if (notSoldItem.BuyerPrice > lowestMarketPrice)

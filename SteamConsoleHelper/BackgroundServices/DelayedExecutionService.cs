@@ -3,6 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using SteamConsoleHelper.Exceptions;
 
 namespace SteamConsoleHelper.BackgroundServices
 {
@@ -10,10 +13,12 @@ namespace SteamConsoleHelper.BackgroundServices
     {
         private static readonly TimeSpan ExecutionDelay = TimeSpan.FromSeconds(5);
 
+        private readonly ILogger<DelayedExecutionPool> _logger;
         private readonly DelayedExecutionPool _requestPool;
 
-        public DelayedExecutionService(DelayedExecutionPool requestPool)
+        public DelayedExecutionService(ILogger<DelayedExecutionPool> logger, DelayedExecutionPool requestPool)
         {
+            _logger = logger;
             _requestPool = requestPool;
         }
 
@@ -24,11 +29,25 @@ namespace SteamConsoleHelper.BackgroundServices
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var action = _requestPool.DequeueActionFromPool();
-
-                action?.Invoke();
-
-                await Task.Delay(ExecutionDelay, stoppingToken);
+                try
+                {
+                    var action = _requestPool.DequeueActionFromPool();
+                    action?.Invoke();
+                }
+                catch (InternalException e)
+                {
+                    _logger.LogError(e.Message);
+                }
+                catch (Exception e)
+                {
+                    var errorText = e.ToString();
+                    _logger.LogError(errorText);
+                    throw new InternalException(InternalError.UnexpectedError, errorText);
+                }
+                finally
+                {
+                    await Task.Delay(ExecutionDelay, stoppingToken);
+                }
             }
         }
     }
