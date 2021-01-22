@@ -18,8 +18,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Abstractions\Enums\" />
 	  <Folder Include="Abstractions\BoosterPack\" />
+	  <Folder Include="Services\Fakes\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="SteamAuth">
+	    <HintPath>..\lib\SteamAuth.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 
 	<ItemGroup>

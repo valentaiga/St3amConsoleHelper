@@ -7,11 +7,15 @@ using Microsoft.Extensions.Hosting;
 
 using Serilog;
 
+using SteamConsoleHelper.Abstractions.Enums;
+using SteamConsoleHelper.Abstractions.Fakes;
 using SteamConsoleHelper.BackgroundServices;
 using SteamConsoleHelper.BackgroundServices.ScheduledJobs;
 using SteamConsoleHelper.Common;
+using SteamConsoleHelper.Extensions;
 using SteamConsoleHelper.Resources;
 using SteamConsoleHelper.Services;
+using SteamConsoleHelper.Services.Fakes;
 
 namespace SteamConsoleHelper
 {
@@ -37,7 +41,7 @@ namespace SteamConsoleHelper
             }
             catch (Exception e)
             {
-                Log.Fatal($"Application failed.", e);
+                Log.Fatal($"Application failed. Exception: {e}");
             }
             finally
             {
@@ -50,14 +54,34 @@ namespace SteamConsoleHelper
                 .UseSerilog()
                 .ConfigureServices(services =>
                 {
+                    if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
+                    {
+                        services.AddSingleton<ISteamAuthenticationService, FakeSteamAuthenticationService>();
+                    }
+                    else
+                    {
+                        services.AddSingleton<ISteamAuthenticationService, SteamAuthenticationService>();
+                    }
+
+                    services.AddSingleton<ProfileSettings>();
+
+                    // initialization
+                    var provider = services.BuildServiceProvider();
+                    if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
+                    {
+                        var steamAuthService = provider.GetRequiredService<ISteamAuthenticationService>();
+                        steamAuthService.Login(null, null);
+                    }
+
+                    provider.GetRequiredService<ProfileSettings>().InitializeAsync().GetAwaiter().GetResult();
+
                     services
+                        .AddSingleton<HttpClientFactory>()
                         .AddSingleton<StoreService>()
                         .AddSingleton<LocalCacheService>()
-                        .AddSingleton<ProfileSettings>()
+                        //.AddSingleton<ProfileSettings>()
                         .AddTransient<SteamUrlService>()
                         .AddTransient<WebRequestService>()
-                        .AddSingleton<SteamUrlService>()
-                        .AddSingleton<HttpClientFactory>()
 
                         .AddSingleton<DelayedExecutionPool>()
 

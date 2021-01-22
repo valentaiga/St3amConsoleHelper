@@ -41,7 +41,7 @@ namespace SteamConsoleHelper.Common
                 getUrl += "?" + string.Join("&", parameters.Select(x => $"{x.name}={x.value}"));
             }
 
-            using var httpClient = await _httpClientFactory.CreateAsync();
+            using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.GetAsync(getUrl);
 
             _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}'");
@@ -60,8 +60,8 @@ namespace SteamConsoleHelper.Common
             {
                 getUrl += "?" + string.Join("&", parameters.Select(x => $"{x.name}={x.value}"));
             }
-
-            using var httpClient = await _httpClientFactory.CreateAsync();
+            
+            using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.GetAsync(getUrl);
 
             _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{getUrl}'");
@@ -72,8 +72,8 @@ namespace SteamConsoleHelper.Common
             where T : SteamResponseBase
         {
             var contentToPush = GetFormContent();
-
-            using var httpClient = await _httpClientFactory.CreateAsync();
+            
+            using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
             _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{url}'");
 
@@ -91,8 +91,8 @@ namespace SteamConsoleHelper.Common
         public async Task PostRequestAsync(string url, object data)
         {
             var contentToPush = GetFormContent();
-
-            using var httpClient = await _httpClientFactory.CreateAsync();
+            
+            using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
             _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{url}'");
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 using SteamConsoleHelper.Abstractions.Market;
+using SteamConsoleHelper.Helpers;
 using SteamConsoleHelper.Services;
 
 namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
@@ -16,7 +17,6 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
     public class CheckMarketPriceJob : ScheduledJobBase<CheckMarketPriceJob>
     {
         private static readonly TimeSpan DefaultRequestDelay = TimeSpan.FromSeconds(3);
-        private const uint ExpensivePrice = 100_00;
 
         private readonly ILogger<CheckMarketPriceJob> _logger;
         private readonly LocalCacheService _cacheService;
@@ -41,7 +41,6 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
         public override async Task DoWorkAsync(CancellationToken cancellationToken)
         {
-            // todo: add to cache model 'DateTime:sentToMarketTime' and ignore all listings earlier than 3 days
             var notSoldItems = await GetNotSoldItemsAsync();
 
             // todo: move some constants to GlobalSettings.cs (like timespan with default delay)
@@ -69,7 +68,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             // filter items older than 3 days OR price is too hugh and it needed to be change now 
             var maximumDateForCheck = DateTime.UtcNow.AddDays(-3);
             var result = marketListings
-                .FindAll(x => x.SellDate < maximumDateForCheck || x.SellerPrice > ExpensivePrice);
+                .FindAll(x => x.SellDate < maximumDateForCheck || x.SellerPrice > PriceHelper.ExpensivePrice);
             _logger.LogDebug($"Total '{result.Count}' items on market older than 3 days or price > 100 rubles");
             
             return result;

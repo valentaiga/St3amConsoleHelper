@@ -10,5 +10,6 @@
         FailedToAddGameToCraftList,
         FailedToRemoveGameFromCraftList,
         InventoryItemIsNotACard,
+        UserIsNotAuthenticated
     }
 }

@@ -30,7 +30,7 @@ namespace SteamConsoleHelper.Services
             var url = _steamUrlService.UnpackBoosterUrl();
 
             var data = new UnpackBoosterPostModel(
-                _profileSettings.PrivateTokens.SessionId,
+                _profileSettings.SessionId,
                 appId,
                 assetId);
 
@@ -43,7 +43,7 @@ namespace SteamConsoleHelper.Services
             var url = _steamUrlService.CreateBoosterUrl();
 
             var data = new CreateBoosterPostModel(
-                _profileSettings.PrivateTokens.SessionId,
+                _profileSettings.SessionId,
                 appId);
 
             await _webRequestService.PostRequestAsync<SteamResponseBase>(url, data);

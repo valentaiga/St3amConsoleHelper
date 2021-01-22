@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Serilog;
 
 using SteamConsoleHelper.Exceptions;
 
@@ -49,7 +48,6 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                 {
                     var errorText = e.ToString();
                     _logger.LogError(errorText);
-                    throw new InternalException(InternalError.UnexpectedError, errorText);
                 }
                 finally
                 {

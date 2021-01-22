@@ -25,11 +25,11 @@ namespace SteamConsoleHelper.Common
 
         public string GetGemsForItemUrl(uint appId, uint itemType) => string.Format(GetGemsForItemBaseUrl, appId, itemType);
 
-        public string UnpackBoosterUrl() => string.Format(UnpackBoosterBaseUrl, _profileSettings.SteamUrlNickname);
+        public string UnpackBoosterUrl() => string.Format(UnpackBoosterBaseUrl, ProfileSettings.UrlNickname);
 
         public string CreateBoosterUrl() => CreateBoosterBaseUrl;
 
-        public string GrindItemIntoGooUrl() => string.Format(GrindItemIntoGooBaseUrl, _profileSettings.SteamUrlNickname);
+        public string GrindItemIntoGooUrl() => string.Format(GrindItemIntoGooBaseUrl, ProfileSettings.UrlNickname);
 
         public string GetItemPriceUrl(uint appId, string hashName) => string.Format(GetItemPriceBaseUrl, appId, hashName);
 

@@ -42,7 +42,6 @@ namespace SteamConsoleHelper.BackgroundServices
                 {
                     var errorText = e.ToString();
                     _logger.LogError(errorText);
-                    throw new InternalException(InternalError.UnexpectedError, errorText);
                 }
                 finally
                 {

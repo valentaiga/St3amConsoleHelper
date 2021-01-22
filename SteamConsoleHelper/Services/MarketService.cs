@@ -62,7 +62,7 @@ namespace SteamConsoleHelper.Services
         {
             var url = _steamUrlService.SellItemUrl();
             var data = new SellItemPostModel(
-                _profileSettings.PrivateTokens.SessionId,
+                _profileSettings.SessionId,
                 item.AppId,
                 item.AssetId,
                 item.ContextId,
@@ -75,7 +75,7 @@ namespace SteamConsoleHelper.Services
         public async Task RemoveItemFromListing(ulong listingId)
         {
             var url = _steamUrlService.RemoveListingUrl(listingId);
-            var data = new RemoveListingPostModel(_profileSettings.PrivateTokens.SessionId);
+            var data = new RemoveListingPostModel(_profileSettings.SessionId);
 
             await _requestService.PostRequestAsync(url, data);
             _logger.LogInformation($"Removed listing from market assetId '{listingId}'");
