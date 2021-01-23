@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-
+using Serilog;
 using SteamAuth;
 
 using SteamConsoleHelper.Common;
@@ -60,6 +60,8 @@ namespace SteamConsoleHelper.Resources
 
             ProfileUrl = response.RequestMessage.RequestUri.ToString();
             UrlNickname = ProfileUrl.Split('/', StringSplitOptions.RemoveEmptyEntries).Last();
+
+            Log.Information($"Profile initialized: ProfileUrl: '{ProfileUrl}', UrlNickname: '{UrlNickname}'");
         }
     }
 }
