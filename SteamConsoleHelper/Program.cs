@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -102,6 +103,7 @@ namespace SteamConsoleHelper
         private static void InitializeServices(IServiceCollection services)
         {
             var provider = services.BuildServiceProvider();
+
             if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
             {
                 var steamAuthService = provider.GetRequiredService<ISteamAuthenticationService>();

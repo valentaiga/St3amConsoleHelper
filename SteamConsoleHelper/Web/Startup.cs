@@ -5,6 +5,9 @@ namespace SteamConsoleHelper.Web
 {
     public class Startup
     {
+        // startup with one main web page allows heroku to override listening port
+        // otherwise heroku app goes down immediately
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
@@ -22,6 +25,5 @@ namespace SteamConsoleHelper.Web
                 endpoints.MapRazorPages();
             });
         }
-
     }
 }
