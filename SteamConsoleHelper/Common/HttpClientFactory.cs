@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-
+using Microsoft.Extensions.Logging;
 using SteamConsoleHelper.Resources;
 
 namespace SteamConsoleHelper.Common
 {
     public class HttpClientFactory
     {
+        private readonly ILogger<HttpClientFactory> _logger;
         private readonly ProfileSettings _profileSettings;
 
-        public HttpClientFactory(ProfileSettings profileSettings)
+        public HttpClientFactory(ILogger<HttpClientFactory> logger, ProfileSettings profileSettings)
         {
+            _logger = logger;
             _profileSettings = profileSettings;
         }
 
         public HttpClient Create()
         {
+            TempWriteLogs();
             var inventoryUrl = ProfileSettings.ProfileUrl + "inventory";
             var handler = new HttpClientHandler
             {
@@ -42,6 +45,13 @@ namespace SteamConsoleHelper.Common
             client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "same-origin");
 
             return client;
+        }
+
+        private void TempWriteLogs()
+        {
+            var message = $@"SteamLoginSecure:'{_profileSettings.SteamLoginSecure}', SessionId: {_profileSettings.SessionId}, SteamId:{_profileSettings.SteamId}
+ProfileSettings.ProfileUrl: {ProfileSettings.ProfileUrl}";
+            _logger.LogInformation(message);
         }
     }
 }

@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -45,10 +47,7 @@ namespace SteamConsoleHelper.Common
             var response = await httpClient.GetAsync(getUrl);
 
             _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}'");
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new InternalException(InternalError.RequestBadRequest);
-            }
+            ValidateResponse(response);
         }
 
         public async Task<T> GetRequestAsync<T>(string url, IEnumerable<(string name, string value)> parameters = null)
@@ -96,10 +95,7 @@ namespace SteamConsoleHelper.Common
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
             _logger.LogDebug($"POST statusCode: '{(int)response.StatusCode}' request '{url}'");
 
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new InternalException(InternalError.RequestBadRequest);
-            }
+            ValidateResponse(response);
 
             IEnumerable<KeyValuePair<string, string>> GetFormContent()
             {
@@ -113,10 +109,7 @@ namespace SteamConsoleHelper.Common
         private async Task<T> DeserializeResponseAsync<T>(HttpResponseMessage response)
             where T : SteamResponseBase
         {
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new InternalException(InternalError.RequestBadRequest);
-            }
+            ValidateResponse(response);
 
             var responseText = await response.Content.ReadAsStringAsync();
 
@@ -133,6 +126,26 @@ namespace SteamConsoleHelper.Common
             }
 
             return result;
+        }
+
+        private void ValidateResponse(HttpResponseMessage response)
+        {
+            switch (response.StatusCode)
+            {
+                case HttpStatusCode.OK:
+                case HttpStatusCode.Accepted:
+                    return;
+                case HttpStatusCode.BadRequest:
+                    throw new InternalException(InternalError.RequestBadRequest);
+                case HttpStatusCode.Unauthorized:
+                    throw new InternalException(InternalError.RequestUnauthorized);
+                case HttpStatusCode.Forbidden:
+                    throw new InternalException(InternalError.TooManyRequests);
+                case HttpStatusCode.NotFound:
+                    throw new InternalException(InternalError.RequestNotFound);
+                default:
+                    throw new InternalException(InternalError.UnexpectedError);
+            }
         }
     }
 }

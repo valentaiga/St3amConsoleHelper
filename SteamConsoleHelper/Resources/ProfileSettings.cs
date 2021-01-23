@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 using SteamAuth;
+
 using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Exceptions;
 using SteamConsoleHelper.Services;
@@ -36,11 +37,17 @@ namespace SteamConsoleHelper.Resources
 
         public static string ProfileUrl { get; private set; }
 
-        public string SteamId => UserLogin?.SteamID.ToString() ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
+        public string SteamId => Environment.GetEnvironmentVariable("SteamLoginSecure")
+                                          ?? UserLogin?.SteamID.ToString()
+                                          ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
-        public string SessionId => UserLogin?.Session.SessionID ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
+        public string SessionId => Environment.GetEnvironmentVariable("SteamLoginSecure")
+                                          ?? UserLogin?.Session.SessionID
+                                          ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
-        public string SteamLoginSecure => UserLogin?.Session.SteamLoginSecure ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
+        public string SteamLoginSecure => Environment.GetEnvironmentVariable("SteamLoginSecure")
+                                          ?? UserLogin?.Session.SteamLoginSecure
+                                          ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
         public void SetUserLogin(UserLogin userLogin)
             => UserLogin = userLogin;
@@ -48,7 +55,7 @@ namespace SteamConsoleHelper.Resources
         public async Task InitializeAsync()
         {
             var url = string.Format(DirectProfileUrl, SteamId);
-            
+
             var response = await _httpClient.GetAsync(url);
 
             ProfileUrl = response.RequestMessage.RequestUri.ToString();

@@ -35,13 +35,14 @@ namespace SteamConsoleHelper.BackgroundServices
             {
                 try
                 {
+
                     await _requestService.GetRequestAsync(url);
                 }
                 catch (InternalException ex)
                 {
                     if (ex.Error == InternalError.RequestBadRequest)
                     {
-                        _logger.LogInformation("Token is invalid, please refresh it.");
+                        _logger.LogWarning("Token is invalid, please refresh it.");
                     }
                 }
                 await Task.Delay(CheckDelay, stoppingToken);
