@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 
 using SteamConsoleHelper.Resources;
 
@@ -16,17 +15,17 @@ namespace SteamConsoleHelper.Common
             _profileSettings = profileSettings;
         }
 
-        public async Task<HttpClient> CreateAsync()
+        public HttpClient Create()
         {
-            var inventoryUrl = await _profileSettings.GetProfileUrlAsync() + "inventory";
+            var inventoryUrl = ProfileSettings.ProfileUrl + "inventory";
             var handler = new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
                 CookieContainer = new CookieContainer()
             };
 
-            handler.CookieContainer.Add(new Cookie("sessionid", _profileSettings.PrivateTokens.SessionId, "/", "steamcommunity.com"));
-            handler.CookieContainer.Add(new Cookie("steamLoginSecure", _profileSettings.PrivateTokens.SteamLoginSecure, "/", "steamcommunity.com"));
+            handler.CookieContainer.Add(new Cookie("sessionid", _profileSettings.SessionId, "/", "steamcommunity.com"));
+            handler.CookieContainer.Add(new Cookie("steamLoginSecure", _profileSettings.SteamLoginSecure, "/", "steamcommunity.com"));
 
             var client = new HttpClient(handler);
 

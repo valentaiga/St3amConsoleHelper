@@ -1,61 +1,60 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using SteamConsoleHelper.Abstractions.Enums;
-using SteamConsoleHelper.Exceptions;
 using SteamConsoleHelper.Helpers;
 using SteamConsoleHelper.Services;
 
 namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 {
-    public class UnpackBoosterPacksJob : ScheduledJobBase
+    public class UnpackBoosterPacksJob : ScheduledJobBase<UnpackBoosterPacksJob>
     {
+        private readonly ILogger<UnpackBoosterPacksJob> _logger;
         private readonly InventoryService _inventoryService;
         private readonly BoosterPackService _boosterPackService;
         private readonly DelayedExecutionPool _delayedExecutionPool;
 
-        public UnpackBoosterPacksJob(InventoryService inventoryService, BoosterPackService boosterPackService, DelayedExecutionPool delayedExecutionPool, JobManager jobManager)
-            : base(jobManager)
+        public UnpackBoosterPacksJob(
+            ILogger<UnpackBoosterPacksJob> logger,
+            InventoryService inventoryService,
+            BoosterPackService boosterPackService,
+            DelayedExecutionPool delayedExecutionPool,
+            JobManager jobManager)
+            : base(logger, jobManager)
         {
+            _logger = logger;
             _inventoryService = inventoryService;
             _boosterPackService = boosterPackService;
             _delayedExecutionPool = delayedExecutionPool;
 
-            JobExecuteDelay = TimeSpan.FromHours(6);
+            JobExecuteDelay = TimeSpan.FromHours(1);
         }
 
-        public override async Task DoWorkAsync()
+        public override async Task DoWorkAsync(CancellationToken cancellationToken)
         {
             var inventoryItems = await _inventoryService.GetInventoryAsync();
 
             var packsToOpen = inventoryItems.FilterByType(ItemType.BoosterPack);
 
-            Console.WriteLine($"{nameof(SellMarketableItemsJob)}: Filtered packs to open: '{packsToOpen.Count}'");
+            _logger.LogDebug($"Packs to open: '{packsToOpen.Count}'");
 
             foreach (var pack in packsToOpen)
             {
-                _delayedExecutionPool.EnqueueRequestToPool(async () =>
+                _delayedExecutionPool.EnqueueTaskToPool(async () =>
                 {
-                    try
+                    _logger.LogInformation($"Opening booster pack '{pack.MarketHashName}' from '{pack.AppId}' game");
+                    var cards = await _boosterPackService.UnpackBooster(pack.AppId, pack.AssetId);
+                    cards.ForEach(x =>
                     {
-                        var cards = await _boosterPackService.UnpackBooster(pack.AppId, pack.AssetId);
-                        cards.ForEach(x =>
+                        if (x.IsFoil)
                         {
-                            if (x.IsFoil)
-                            {
-                                // todo: telegram bot integration to check sell page
-                                Console.WriteLine($"{nameof(UnpackBoosterPacksJob)}: You got foil from '{pack.MarketName}' pack! Foil name - '{x.Name}'");
-                            }
-                        });
-                    }
-                    catch (InternalException e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
+                            // todo: telegram bot integration to check sell page
+                            _logger.LogInformation($"Got foil from '{pack.MarketName}' pack! Foil name - '{x.Name}'");
+                        }
+                    });
                 });
             }
         }

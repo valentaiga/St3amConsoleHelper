@@ -1,14 +1,17 @@
-﻿using SteamConsoleHelper.Abstractions.Inventory;
+﻿using System;
+using SteamConsoleHelper.Abstractions.Inventory;
 
 namespace SteamConsoleHelper.Abstractions.Cache
 {
-    public struct ItemWithPrice
+    public readonly struct ItemWithPrice
     {
-        public InventoryItem Item { get; set; }
+        public InventoryItem Item { get; }
 
-        public uint Price { get; set; }
+        public uint Price { get; }
+
+        public DateTime SellTime { get; }
 
         public ItemWithPrice(InventoryItem item, uint price)
-            => (Item, Price) = (item, price);
+            => (Item, Price, SellTime) = (item, price, DateTime.UtcNow);
     }
 }

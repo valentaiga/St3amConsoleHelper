@@ -10,6 +10,6 @@
 
         public uint? MedianPrice { get; set; }
 
-        public uint Volume { get; set; }
+        public uint? Volume { get; set; }
     }
 }

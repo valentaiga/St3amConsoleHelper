@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -16,6 +17,7 @@ namespace SteamConsoleHelper.Common
     // ReSharper disable PossibleNullReferenceException
     public class WebRequestService
     {
+        private readonly ILogger<WebRequestService> _logger;
         private readonly HttpClientFactory _httpClientFactory;
 
         private static readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
@@ -24,11 +26,30 @@ namespace SteamConsoleHelper.Common
             Formatting = Formatting.Indented
         };
 
-        public WebRequestService(HttpClientFactory httpClientFactory)
+        public WebRequestService(ILogger<WebRequestService> logger, HttpClientFactory httpClientFactory)
         {
+            _logger = logger;
             _httpClientFactory = httpClientFactory;
         }
 
+        public async Task GetRequestAsync(string url, IEnumerable<(string name, string value)> parameters = null)
+        {
+            var getUrl = url;
+
+            if (parameters != null && parameters.Any())
+            {
+                getUrl += "?" + string.Join("&", parameters.Select(x => $"{x.name}={x.value}"));
+            }
+
+            using var httpClient = _httpClientFactory.Create();
+            var response = await httpClient.GetAsync(getUrl);
+
+            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}'");
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InternalException(InternalError.RequestBadRequest);
+            }
+        }
 
         public async Task<T> GetRequestAsync<T>(string url, IEnumerable<(string name, string value)> parameters = null)
             where T : SteamResponseBase
@@ -39,10 +60,11 @@ namespace SteamConsoleHelper.Common
             {
                 getUrl += "?" + string.Join("&", parameters.Select(x => $"{x.name}={x.value}"));
             }
-
-            using var httpClient = await _httpClientFactory.CreateAsync();
+            
+            using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.GetAsync(getUrl);
 
+            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{getUrl}'");
             return await DeserializeResponseAsync<T>(response);
         }
 
@@ -50,9 +72,10 @@ namespace SteamConsoleHelper.Common
             where T : SteamResponseBase
         {
             var contentToPush = GetFormContent();
-
-            using var httpClient = await _httpClientFactory.CreateAsync();
+            
+            using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
+            _logger.LogDebug($"POST statusCode: '{(int)response.StatusCode}' request '{url}'");
 
             return await DeserializeResponseAsync<T>(response);
 
@@ -68,9 +91,10 @@ namespace SteamConsoleHelper.Common
         public async Task PostRequestAsync(string url, object data)
         {
             var contentToPush = GetFormContent();
-
-            using var httpClient = await _httpClientFactory.CreateAsync();
+            
+            using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
+            _logger.LogDebug($"POST statusCode: '{(int)response.StatusCode}' request '{url}'");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -86,8 +110,8 @@ namespace SteamConsoleHelper.Common
             }
         }
 
-        private static async Task<T> DeserializeResponseAsync<T>(HttpResponseMessage response)
-        where T : SteamResponseBase
+        private async Task<T> DeserializeResponseAsync<T>(HttpResponseMessage response)
+            where T : SteamResponseBase
         {
             if (!response.IsSuccessStatusCode)
             {
@@ -96,26 +120,19 @@ namespace SteamConsoleHelper.Common
 
             var responseText = await response.Content.ReadAsStringAsync();
 
-            try
+            var result = JsonConvert.DeserializeObject<T>(responseText, JsonSerializerSettings);
+
+            if (result == null)
             {
-                var result = JsonConvert.DeserializeObject<T>(responseText, JsonSerializerSettings);
-
-                if (result == null)
-                {
-                    throw new InternalException(InternalError.FailedToDeserializeResponse);
-                }
-
-                if (result.Success != 1)
-                {
-                    throw new InternalException(result.ErrorMessage, InternalError.FailActionResult);
-                }
-
-                return result;
+                throw new InternalException(InternalError.FailedToDeserializeResponse);
             }
-            catch (Exception e)
+
+            if (!result.Success)
             {
-                throw new InternalException(e, InternalError.FailedToDeserializeResponse);
+                throw new InternalException(InternalError.SteamServicesAreBusy, result.ErrorMessage);
             }
+
+            return result;
         }
     }
 }

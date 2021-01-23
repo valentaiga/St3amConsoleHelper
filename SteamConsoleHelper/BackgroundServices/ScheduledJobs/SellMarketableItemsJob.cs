@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Logging;
 using SteamConsoleHelper.Abstractions.Enums;
 using SteamConsoleHelper.Abstractions.Market;
 using SteamConsoleHelper.Exceptions;
@@ -9,16 +10,22 @@ using SteamConsoleHelper.Services;
 
 namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 {
-    public class SellMarketableItemsJob : ScheduledJobBase
+    public class SellMarketableItemsJob : ScheduledJobBase<SellMarketableItemsJob>
     {
-
+        private readonly ILogger<SellMarketableItemsJob> _logger;
         private readonly InventoryService _inventoryService;
         private readonly MarketService _marketService;
         private readonly DelayedExecutionPool _delayedExecutionPool;
 
-        public SellMarketableItemsJob(InventoryService inventoryService, MarketService marketService, DelayedExecutionPool delayedExecutionPool, JobManager jobManager)
-            : base(jobManager)
+        public SellMarketableItemsJob(
+            ILogger<SellMarketableItemsJob> logger, 
+            InventoryService inventoryService, 
+            MarketService marketService, 
+            DelayedExecutionPool delayedExecutionPool, 
+            JobManager jobManager)
+            : base(logger, jobManager)
         {
+            _logger = logger;
             _inventoryService = inventoryService;
             _marketService = marketService;
             _delayedExecutionPool = delayedExecutionPool;
@@ -26,7 +33,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             JobExecuteDelay = TimeSpan.FromHours(1);
         }
 
-        public override async Task DoWorkAsync()
+        public override async Task DoWorkAsync(CancellationToken cancellationToken)
         {
             var inventoryItems = await _inventoryService.GetInventoryAsync();
 
@@ -35,38 +42,29 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                 .FilterByCommodity()
                 .FilterByType(ItemType.TradingCard);
 
-            Console.WriteLine($"{nameof(SellMarketableItemsJob)}: Filtered cards to sell: '{cardsToSell.Count}'");
+            _logger.LogDebug($"Filtered cards to sell: '{cardsToSell.Count}'");
 
             foreach (var card in cardsToSell)
             {
-                _delayedExecutionPool.EnqueueRequestToPool(async () =>
+                _delayedExecutionPool.EnqueueTaskToPool(async () =>
                 {
-                    try
-                    {
-                        var price = await _marketService.GetItemPriceAsync(card);
+                    var price = await _marketService.GetItemPriceAsync(card);
 
-                        if (price.LowestPrice == null && price.MedianPrice == null)
-                        {
-                            return;
-                        }
-
-                        var calculatedPrice = PriceHelper.CalculateSellerPrice(price.LowestPrice, true);
-                        
-                        if (card.IsCardFoil())
-                        {
-                            Console.WriteLine($"Sending foil '{card.MarketHashName}'. Cost '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
-                        }
-
-                        await _marketService.SellItemAsync(card, calculatedPrice);
-                    }
-                    catch (InternalException e)
+                    if (price.LowestPrice == null && price.MedianPrice == null)
                     {
-                        Console.WriteLine(e.Message);
+                        return;
                     }
-                    catch (Exception e)
+
+                    var calculatedPrice = price.LowestPrice > PriceHelper.ExpensivePrice && price.LowestPrice < price.MedianPrice
+                        ? PriceHelper.CalculateSellerPrice(price.LowestPrice, true) 
+                        : PriceHelper.CalculateSellerPrice(price.MedianPrice, true);
+
+                    if (card.IsCardFoil())
                     {
-                        Console.WriteLine(e);
+                        _logger.LogInformation($"Sending foil '{card.MarketHashName}'. Cost '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
                     }
+
+                    await _marketService.SellItemAsync(card, calculatedPrice);
                 });
             }
         }

@@ -12,8 +12,9 @@ namespace SteamConsoleHelper.Common
         private const string GetInventoryBaseUrl = "https://steamcommunity.com/inventory/{0}/753/6?l=english&count=5000";
         private const string SellItemBaseUrl = "https://steamcommunity.com/market/sellitem/";
         private const string GetItemPriceBaseUrl = "https://steamcommunity.com/market/priceoverview/?appid={0}&country=RU&currency=5&market_hash_name={1}";
-        private const string GetMarketListingsBaseUrl = "https://steamcommunity.com/market/mylistings?count=100&start={0}";
+        private const string GetMarketListingsBaseUrl = "https://steamcommunity.com/market/mylistings?count=100&start={0}&l=english";
         private const string RemoveListingBaseUrl = "https://steamcommunity.com/market/removelisting/{0}";
+        private const string GetNotificationsCountBaseUrl = "https://steamcommunity.com/actions/GetNotificationCounts";
 
         private readonly ProfileSettings _profileSettings;
 
@@ -24,11 +25,11 @@ namespace SteamConsoleHelper.Common
 
         public string GetGemsForItemUrl(uint appId, uint itemType) => string.Format(GetGemsForItemBaseUrl, appId, itemType);
 
-        public string UnpackBoosterUrl() => string.Format(UnpackBoosterBaseUrl, _profileSettings.SteamUrlNickname);
+        public string UnpackBoosterUrl() => string.Format(UnpackBoosterBaseUrl, ProfileSettings.UrlNickname);
 
         public string CreateBoosterUrl() => CreateBoosterBaseUrl;
 
-        public string GrindItemIntoGooUrl() => string.Format(GrindItemIntoGooBaseUrl, _profileSettings.SteamUrlNickname);
+        public string GrindItemIntoGooUrl() => string.Format(GrindItemIntoGooBaseUrl, ProfileSettings.UrlNickname);
 
         public string GetItemPriceUrl(uint appId, string hashName) => string.Format(GetItemPriceBaseUrl, appId, hashName);
 
@@ -39,5 +40,7 @@ namespace SteamConsoleHelper.Common
         public string RemoveListingUrl(ulong listingId) => string.Format(RemoveListingBaseUrl, listingId);
 
         public string GetCurrentInventoryUrl() => string.Format(GetInventoryBaseUrl, _profileSettings.SteamId);
+
+        public string GetNotificationsCountUrl() => GetNotificationsCountBaseUrl;
     }
 }

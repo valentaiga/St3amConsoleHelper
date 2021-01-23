@@ -1,50 +1,27 @@
-﻿using System;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Linq;
+
 using SteamConsoleHelper.Abstractions.BoosterPack;
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.Abstractions.Market;
 using SteamConsoleHelper.ApiModels.Responses.BoosterPack;
 using SteamConsoleHelper.ApiModels.Responses.Inventory;
 using SteamConsoleHelper.ApiModels.Responses.Market;
+using SteamConsoleHelper.Extensions;
 
 namespace SteamConsoleHelper.Helpers
 {
     public static class ModelMapper
     {
-        private static readonly Regex NotDigitsRegex = new Regex(@"[^0-9]+");
-        private static readonly Regex PriceRegex = new Regex(@"([0-9])+(,)?([0-9]{0,2})");
-
         public static ItemMarketPrice ToModel(this ItemPriceResponseModel response, uint appId, string hashName)
         {
             return new ItemMarketPrice
             {
-                LowestPrice = ConvertStringToPrice(response.LowestPriceString),
-                MedianPrice = ConvertStringToPrice(response.MedianPriceString),
-                Volume = Convert.ToUInt32(NotDigitsRegex.Replace(response.Volume, string.Empty)),
+                LowestPrice = ParseHelper.ParsePrice(response.LowestPriceString),
+                MedianPrice = ParseHelper.ParsePrice(response.MedianPriceString),
+                Volume = response.Volume.KeepNumbersOnly()?.ToUInt(),
                 AppId = appId,
                 HashName = hashName
             };
-
-            static uint? ConvertStringToPrice(string value)
-            {
-                if (value == null)
-                {
-                    return null;
-                }
-
-                var stringPrice = PriceRegex.Match(value).Value;
-                var stringPriceNoDot = NotDigitsRegex.Replace(stringPrice, string.Empty);
-
-                var result = Convert.ToUInt32(stringPriceNoDot);
-
-                if (!value.Contains(','))
-                {
-                    result *= 100;
-                }
-
-                return result;
-            }
         }
 
         public static InventoryItem ToModel(this InventoryAssetResponseModel asset, InventoryDescriptionResponseModel description)
@@ -73,15 +50,19 @@ namespace SteamConsoleHelper.Helpers
             };
         }
 
-        public static MarketListing ToModel(this InventoryAssetResponseModel asset)
+        public static MarketListing ToModel(this ListingAsset asset, ListingHover listingHover, ListingDescription listingDescription)
         {
             return new MarketListing
             {
-                AppId = asset.AppId,
+                ListingId = listingHover.ListingId,
                 AssetId = asset.AssetId,
+                AppId = asset.AppId,
                 ClassId = asset.ClassId,
                 ContextId = asset.ContextId,
-                InstanceId = asset.InstanceId
+                SellerPrice = listingDescription.SellerPrice,
+                BuyerPrice = listingDescription.BuyerPrice,
+                SellDate = listingDescription.MarketSellDate,
+                HashName = listingDescription.HashName
             };
         }
 

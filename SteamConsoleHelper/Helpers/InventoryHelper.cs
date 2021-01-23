@@ -25,30 +25,12 @@ namespace SteamConsoleHelper.Helpers
             List<InventoryDescriptionResponseModel> descriptions)
         {
             var result = new List<(InventoryAssetResponseModel, InventoryDescriptionResponseModel)>();
-            var lookup = descriptions.ToLookup(x => x.InstanceId);
+            var lookup = descriptions.ToLookup(x => x.ClassId);
 
             foreach (var asset in assets)
             {
-                var description = lookup[asset.InstanceId].First(x => x.ClassId == asset.ClassId);
+                var description = lookup[asset.ClassId].First(x => x.InstanceId == asset.InstanceId);
                 result.Add((asset, description));
-            }
-
-            return result;
-        }
-
-        public static List<(ItemWithPrice itemWithPrice, MarketListing listing)> MapPrices(
-            List<ItemWithPrice> marketPrices,
-            List<MarketListing> listings)
-        {
-            var result = new List<(ItemWithPrice, MarketListing)>();
-            var lookup = listings.ToLookup(x => x.InstanceId);
-
-            foreach (var itemWithPrice in marketPrices)
-            {
-                var asset = lookup[itemWithPrice.Item.InstanceId]
-                    .FirstOrDefault(x => x.ClassId == itemWithPrice.Item.ClassId);
-
-                result.Add((itemWithPrice, asset));
             }
 
             return result;

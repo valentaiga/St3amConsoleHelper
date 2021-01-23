@@ -2,32 +2,45 @@
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
+using SteamConsoleHelper.Exceptions;
+
 namespace SteamConsoleHelper.BackgroundServices
 {
     public class DelayedExecutionPool
     {
-        private static readonly TimeSpan DefaultOnFailureDelay = TimeSpan.FromSeconds(0.5);
-        
-        private readonly ConcurrentQueue<Action> _actionsQueue;
+        private readonly ILogger<DelayedExecutionPool> _logger;
+        private readonly ConcurrentQueue<Func<Task>> _actionsQueue;
 
-        public DelayedExecutionPool()
+        public DelayedExecutionPool(ILogger<DelayedExecutionPool> logger)
         {
-            _actionsQueue = new ConcurrentQueue<Action>();
+            _logger = logger;
+            _actionsQueue = new ConcurrentQueue<Func<Task>>();
+
+            _actionsQueue.Enqueue(async () =>
+            {
+                await Task.Delay(100);
+                throw new InternalException(InternalError.UnexpectedError);
+            });
         }
 
-        public void EnqueueRequestToPool(Action action)
+        public void EnqueueTaskToPool(Func<Task> action)
         {
             _actionsQueue.Enqueue(action);
         }
 
-        public Action DequeueRequestFromPool()
+        public Func<Task> DequeueTaskFromPool()
         {
             var success = _actionsQueue.TryDequeue(out var action) && action != null;
-            
-            Console.WriteLine($"{nameof(DelayedExecutionPool)}: '{_actionsQueue.Count}' more actions in queue");
 
-            return success ? action : async () => await Task.Delay(DefaultOnFailureDelay);
+            var actionsCount = _actionsQueue.Count;
+            if (actionsCount > 0)
+            {
+                _logger.LogInformation($"'{actionsCount}' more actions in queue");
+            }
+
+            return success ? action : () => Task.CompletedTask;
         }
-            
     }
 }

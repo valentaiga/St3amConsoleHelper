@@ -10,7 +10,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
         public JobManager()
         {
-            _currentDelay = TimeSpan.FromMinutes(0);
+            _currentDelay = TimeSpan.FromSeconds(5);
         }
 
         public TimeSpan GetDelayBeforeFirstJobRun()
@@ -18,7 +18,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             lock (Locker)
             {
                 var result = _currentDelay;
-                _currentDelay = _currentDelay.Add(TimeSpan.FromMinutes(3));
+                _currentDelay = _currentDelay.Add(TimeSpan.FromMinutes(2));
                 return result;
             }
         }

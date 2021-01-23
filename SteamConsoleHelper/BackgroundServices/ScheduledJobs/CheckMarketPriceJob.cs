@@ -1,83 +1,82 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
-using SteamConsoleHelper.Abstractions.Cache;
-using SteamConsoleHelper.Abstractions.Inventory;
+using Microsoft.Extensions.Logging;
+
 using SteamConsoleHelper.Abstractions.Market;
-using SteamConsoleHelper.Extensions;
 using SteamConsoleHelper.Helpers;
 using SteamConsoleHelper.Services;
 
 namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 {
-    public class CheckMarketPriceJob : ScheduledJobBase
+    /// <summary>
+    /// Job for removing more expensive items from market
+    /// </summary>
+    public class CheckMarketPriceJob : ScheduledJobBase<CheckMarketPriceJob>
     {
         private static readonly TimeSpan DefaultRequestDelay = TimeSpan.FromSeconds(3);
 
+        private readonly ILogger<CheckMarketPriceJob> _logger;
         private readonly LocalCacheService _cacheService;
         private readonly MarketService _marketService;
         private readonly DelayedExecutionPool _delayedExecutionPool;
 
-        public CheckMarketPriceJob(LocalCacheService cacheService, MarketService marketService, DelayedExecutionPool delayedExecutionPool, JobManager jobManager)
-            : base(jobManager)
+        public CheckMarketPriceJob(
+            ILogger<CheckMarketPriceJob> logger,
+            LocalCacheService cacheService,
+            MarketService marketService,
+            DelayedExecutionPool delayedExecutionPool,
+            JobManager jobManager)
+            : base(logger, jobManager)
         {
+            _logger = logger;
             _cacheService = cacheService;
             _marketService = marketService;
             _delayedExecutionPool = delayedExecutionPool;
 
-            JobExecuteDelay = TimeSpan.FromHours(12);
+            JobExecuteDelay = TimeSpan.FromMinutes(15);
         }
 
-        public override async Task DoWorkAsync()
+        public override async Task DoWorkAsync(CancellationToken cancellationToken)
         {
-            // todo: add to cache model 'DateTime:sentToMarketTime' and ignore all listings earlier than 3 days
             var notSoldItems = await GetNotSoldItemsAsync();
 
             // todo: move some constants to GlobalSettings.cs (like timespan with default delay)
             foreach (var notSoldItem in notSoldItems)
             {
-                await Task.Delay(DefaultRequestDelay);
+                await Task.Delay(DefaultRequestDelay, cancellationToken);
+                
+                _logger.LogDebug($"listingId: '{notSoldItem.ListingId}' hashName: {notSoldItem.HashName}");
+                var lowestMarketPrice = await GetLowestMarketPriceAsync(notSoldItem.AppId, notSoldItem.HashName);
 
-                var myPrice = notSoldItem.itemWithPrice.Price;
-                var lowestMarketPrice = await GetLowestMarketPriceAsync(notSoldItem.itemWithPrice.Item);
-                var calculatedMarketPrice = PriceHelper.CalculateSellerPrice(lowestMarketPrice);
-
-                if (myPrice > calculatedMarketPrice)
+                if (notSoldItem.BuyerPrice > lowestMarketPrice)
                 {
-                    _delayedExecutionPool.EnqueueRequestToPool(async () =>
+                    _delayedExecutionPool.EnqueueTaskToPool(async () =>
                     {
-                        // todo: parse listingId from response
-                        var listingId = (uint) 1239452325;
-                        await _marketService.RemoveItemFromListing(listingId);
+                        await _marketService.RemoveItemFromListing(notSoldItem.ListingId);
                     });
                 }
             }
         }
 
-        private async Task<List<(ItemWithPrice itemWithPrice, MarketListing listing)>> GetNotSoldItemsAsync()
+        private async Task<List<MarketListing>> GetNotSoldItemsAsync()
         {
             var marketListings = await _marketService.GetAllMyListings();
-            var sentToMarketItems = await _cacheService.GetCachedSentItemsToMarket();
 
-            var mappedListings = InventoryHelper.MapPrices(sentToMarketItems, marketListings);
+            // filter items older than 3 days OR price is too hugh and it needed to be change now 
+            var maximumDateForCheck = DateTime.UtcNow.AddDays(-3);
+            var result = marketListings
+                .FindAll(x => x.SellDate < maximumDateForCheck || x.SellerPrice > PriceHelper.ExpensivePrice);
+            _logger.LogDebug($"Total '{result.Count}' items on market older than 3 days or price > 100 rubles");
             
-            var soldItems = mappedListings.FindAll(x => x.listing != null);
-            foreach (var soldItem in soldItems)
-            {
-                await _cacheService.RemoveSentItemToMarketFromCacheAsync(
-                    soldItem.itemWithPrice.Item,
-                    soldItem.itemWithPrice.Price);
-            }
-
-            var notSoldItems = mappedListings.FindAll(x => x.listing != null);
-
-            return notSoldItems;
+            return result;
         }
 
-        private async Task<uint?> GetLowestMarketPriceAsync(InventoryItem item)
+        private async Task<uint?> GetLowestMarketPriceAsync(uint appId, string hashName)
         {
-            var itemPrice = await _marketService.GetItemPriceAsync(item);
+            var itemPrice = await _marketService.GetItemPriceAsync(appId, hashName);
             return itemPrice.LowestPrice;
         }
     }

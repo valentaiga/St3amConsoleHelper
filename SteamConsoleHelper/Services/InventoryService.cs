@@ -32,7 +32,7 @@ namespace SteamConsoleHelper.Services
         {
             var url = _steamUrlService.GrindItemIntoGooUrl();
             var data = new GrindItemIntoGemsPostModel(
-                _profileSettings.PrivateTokens.SessionId,
+                _profileSettings.SessionId,
                 appId,
                 assetId,
                 contextId);
