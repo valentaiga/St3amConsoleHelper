@@ -46,7 +46,8 @@ namespace SteamConsoleHelper.Common
             using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.GetAsync(getUrl);
 
-            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}'");
+            var text = response.Content.ReadAsStringAsync();
+            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}' textResponse: {text}");
             ValidateResponse(response);
         }
 

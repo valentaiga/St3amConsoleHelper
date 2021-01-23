@@ -37,11 +37,11 @@ namespace SteamConsoleHelper.Resources
 
         public static string ProfileUrl { get; private set; }
 
-        public string SteamId => Environment.GetEnvironmentVariable("SteamLoginSecure")
+        public string SteamId => Environment.GetEnvironmentVariable("SteamId")
                                           ?? UserLogin?.SteamID.ToString()
                                           ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
-        public string SessionId => Environment.GetEnvironmentVariable("SteamLoginSecure")
+        public string SessionId => Environment.GetEnvironmentVariable("SessionId")
                                           ?? UserLogin?.Session.SessionID
                                           ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
