@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
-using SteamConsoleHelper.Exceptions;
-
 namespace SteamConsoleHelper.BackgroundServices
 {
     public class DelayedExecutionPool
@@ -17,12 +15,6 @@ namespace SteamConsoleHelper.BackgroundServices
         {
             _logger = logger;
             _actionsQueue = new ConcurrentQueue<Func<Task>>();
-
-            _actionsQueue.Enqueue(async () =>
-            {
-                await Task.Delay(100);
-                throw new InternalException(InternalError.UnexpectedError);
-            });
         }
 
         public void EnqueueTaskToPool(Func<Task> action)

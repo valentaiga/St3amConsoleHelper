@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,11 +16,14 @@ using SteamConsoleHelper.Extensions;
 using SteamConsoleHelper.Resources;
 using SteamConsoleHelper.Services;
 using SteamConsoleHelper.Services.Fakes;
+using SteamConsoleHelper.Web;
 
 namespace SteamConsoleHelper
 {
     class Program
     {
+        private const string DefaultListenPort = "8080";
+
         private static IConfiguration Configuration { get; } = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -52,8 +55,16 @@ namespace SteamConsoleHelper
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .UseSerilog()
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseKestrel(options =>
+                        options.ListenAnyIP(int.Parse(Environment.GetEnvironmentVariable("PORT") ??
+                                                      DefaultListenPort)));
+                })
                 .ConfigureServices(services =>
                 {
+                    services.AddSingleton<ProfileSettings>();
                     if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
                     {
                         services.AddSingleton<ISteamAuthenticationService, FakeSteamAuthenticationService>();
@@ -62,24 +73,13 @@ namespace SteamConsoleHelper
                     {
                         services.AddSingleton<ISteamAuthenticationService, SteamAuthenticationService>();
                     }
-
-                    services.AddSingleton<ProfileSettings>();
-
-                    // initialization
-                    var provider = services.BuildServiceProvider();
-                    if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
-                    {
-                        var steamAuthService = provider.GetRequiredService<ISteamAuthenticationService>();
-                        steamAuthService.Login(null, null);
-                    }
-
-                    provider.GetRequiredService<ProfileSettings>().InitializeAsync().GetAwaiter().GetResult();
+                    
+                    InitializeServices(services);
 
                     services
                         .AddSingleton<HttpClientFactory>()
                         .AddSingleton<StoreService>()
                         .AddSingleton<LocalCacheService>()
-                        //.AddSingleton<ProfileSettings>()
                         .AddTransient<SteamUrlService>()
                         .AddTransient<WebRequestService>()
 
@@ -98,5 +98,17 @@ namespace SteamConsoleHelper
                         .AddHostedService<UnpackBoosterPacksJob>()
                         .AddHostedService<SellMarketableItemsJob>();
                 });
+
+        private static void InitializeServices(IServiceCollection services)
+        {
+            var provider = services.BuildServiceProvider();
+            if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
+            {
+                var steamAuthService = provider.GetRequiredService<ISteamAuthenticationService>();
+                steamAuthService.Login(null, null);
+            }
+
+            provider.GetRequiredService<ProfileSettings>().InitializeAsync().GetAwaiter().GetResult();
+        }
     }
 }
