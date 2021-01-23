@@ -53,7 +53,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
                 if (notSoldItem.BuyerPrice > lowestMarketPrice)
                 {
-                    _delayedExecutionPool.EnqueueActionToPool(async () =>
+                    _delayedExecutionPool.EnqueueTaskToPool(async () =>
                     {
                         await _marketService.RemoveItemFromListing(notSoldItem.ListingId);
                     });

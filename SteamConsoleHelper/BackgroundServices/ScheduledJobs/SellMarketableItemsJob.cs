@@ -46,7 +46,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
             foreach (var card in cardsToSell)
             {
-                _delayedExecutionPool.EnqueueActionToPool(async () =>
+                _delayedExecutionPool.EnqueueTaskToPool(async () =>
                 {
                     var price = await _marketService.GetItemPriceAsync(card);
 
@@ -55,8 +55,10 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                         return;
                     }
 
-                    var calculatedPrice = PriceHelper.CalculateSellerPrice(price.LowestPrice, true);
-                    
+                    var calculatedPrice = price.LowestPrice > PriceHelper.ExpensivePrice && price.LowestPrice < price.MedianPrice
+                        ? PriceHelper.CalculateSellerPrice(price.LowestPrice, true) 
+                        : PriceHelper.CalculateSellerPrice(price.MedianPrice, true);
+
                     if (card.IsCardFoil())
                     {
                         _logger.LogInformation($"Sending foil '{card.MarketHashName}'. Cost '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");

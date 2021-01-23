@@ -1,27 +1,36 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
+
+using SteamConsoleHelper.Exceptions;
 
 namespace SteamConsoleHelper.BackgroundServices
 {
     public class DelayedExecutionPool
     {
         private readonly ILogger<DelayedExecutionPool> _logger;
-        private readonly ConcurrentQueue<Action> _actionsQueue;
+        private readonly ConcurrentQueue<Func<Task>> _actionsQueue;
 
         public DelayedExecutionPool(ILogger<DelayedExecutionPool> logger)
         {
             _logger = logger;
-            _actionsQueue = new ConcurrentQueue<Action>();
+            _actionsQueue = new ConcurrentQueue<Func<Task>>();
+
+            _actionsQueue.Enqueue(async () =>
+            {
+                await Task.Delay(100);
+                throw new InternalException(InternalError.UnexpectedError);
+            });
         }
 
-        public void EnqueueActionToPool(Action action)
+        public void EnqueueTaskToPool(Func<Task> action)
         {
             _actionsQueue.Enqueue(action);
         }
 
-        public Action DequeueActionFromPool()
+        public Func<Task> DequeueTaskFromPool()
         {
             var success = _actionsQueue.TryDequeue(out var action) && action != null;
 
@@ -31,7 +40,7 @@ namespace SteamConsoleHelper.BackgroundServices
                 _logger.LogInformation($"'{actionsCount}' more actions in queue");
             }
 
-            return success ? action : null;
+            return success ? action : () => Task.CompletedTask;
         }
     }
 }

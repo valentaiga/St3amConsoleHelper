@@ -43,7 +43,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
             foreach (var pack in packsToOpen)
             {
-                _delayedExecutionPool.EnqueueActionToPool(async () =>
+                _delayedExecutionPool.EnqueueTaskToPool(async () =>
                 {
                     _logger.LogInformation($"Opening booster pack '{pack.MarketHashName}' from '{pack.AppId}' game");
                     var cards = await _boosterPackService.UnpackBooster(pack.AppId, pack.AssetId);

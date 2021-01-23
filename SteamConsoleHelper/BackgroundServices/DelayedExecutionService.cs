@@ -31,8 +31,8 @@ namespace SteamConsoleHelper.BackgroundServices
             {
                 try
                 {
-                    var action = _requestPool.DequeueActionFromPool();
-                    action?.Invoke();
+                    var task = _requestPool.DequeueTaskFromPool();
+                    await task.Invoke();
                 }
                 catch (InternalException e)
                 {

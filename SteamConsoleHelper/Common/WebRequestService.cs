@@ -75,7 +75,7 @@ namespace SteamConsoleHelper.Common
             
             using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
-            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{url}'");
+            _logger.LogDebug($"POST statusCode: '{(int)response.StatusCode}' request '{url}'");
 
             return await DeserializeResponseAsync<T>(response);
 
@@ -94,7 +94,7 @@ namespace SteamConsoleHelper.Common
             
             using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
-            _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{url}'");
+            _logger.LogDebug($"POST statusCode: '{(int)response.StatusCode}' request '{url}'");
 
             if (!response.IsSuccessStatusCode)
             {
