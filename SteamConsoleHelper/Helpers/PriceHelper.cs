@@ -18,8 +18,8 @@ namespace SteamConsoleHelper.Helpers
             if (lowerPriceByDefault)
             {
                 sellerPrice = sellerPrice > ExpensivePrice
-                    ? sellerPrice - CheaperByValue
-                    : sellerPrice - CheaperByBigValue;
+                    ? sellerPrice - CheaperByBigValue
+                    : sellerPrice - CheaperByValue;
             }
 
             return sellerPrice;

@@ -3,12 +3,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Serilog;
+
 using SteamAuth;
 
-using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Exceptions;
-using SteamConsoleHelper.Services;
 
 namespace SteamConsoleHelper.Resources
 {
@@ -20,14 +20,12 @@ namespace SteamConsoleHelper.Resources
 
         public ProfileSettings()
         {
-            //_httpClient = new HttpClient();
             var handler = new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
                 CookieContainer = new CookieContainer()
             };
             _httpClient = new HttpClient(handler);
-            //_httpClient = httpClientFactory.Create();
         }
 
         // todo: remove static and somehow update ProfileSettings in jobs

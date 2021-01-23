@@ -24,13 +24,13 @@ namespace SteamConsoleHelper.BackgroundServices
 
         public Func<Task> DequeueTaskFromPool()
         {
-            var success = _actionsQueue.TryDequeue(out var action) && action != null;
-
             var actionsCount = _actionsQueue.Count;
             if (actionsCount > 0)
             {
                 _logger.LogInformation($"'{actionsCount}' more actions in queue");
             }
+
+            var success = _actionsQueue.TryDequeue(out var action) && action != null;
 
             return success ? action : () => Task.CompletedTask;
         }

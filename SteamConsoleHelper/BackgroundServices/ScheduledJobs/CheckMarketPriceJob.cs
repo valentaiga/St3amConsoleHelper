@@ -48,9 +48,9 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             {
                 await Task.Delay(DefaultRequestDelay, cancellationToken);
                 
-                _logger.LogDebug($"listingId: '{notSoldItem.ListingId}' hashName: {notSoldItem.HashName}");
                 var lowestMarketPrice = await GetLowestMarketPriceAsync(notSoldItem.AppId, notSoldItem.HashName);
 
+                _logger.LogDebug($"listingId: '{notSoldItem.ListingId}' hashName: '{notSoldItem.HashName}' buyerPrice: '{notSoldItem.BuyerPrice}' lowestMarketPrice: '{lowestMarketPrice}'");
                 if (notSoldItem.BuyerPrice > lowestMarketPrice)
                 {
                     _delayedExecutionPool.EnqueueTaskToPool(async () =>

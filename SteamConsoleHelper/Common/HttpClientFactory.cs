@@ -19,7 +19,6 @@ namespace SteamConsoleHelper.Common
 
         public HttpClient Create()
         {
-            TempWriteLogs();
             var inventoryUrl = ProfileSettings.ProfileUrl + "inventory";
             var handler = new HttpClientHandler
             {
@@ -45,13 +44,6 @@ namespace SteamConsoleHelper.Common
             client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "same-origin");
 
             return client;
-        }
-
-        private void TempWriteLogs()
-        {
-            var message = $@"SteamLoginSecure:'{_profileSettings.SteamLoginSecure}', SessionId: {_profileSettings.SessionId}, SteamId:{_profileSettings.SteamId}
-ProfileSettings.ProfileUrl: {ProfileSettings.ProfileUrl}";
-            _logger.LogInformation(message);
         }
     }
 }

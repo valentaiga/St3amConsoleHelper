@@ -57,7 +57,9 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
                     var calculatedPrice = price.LowestPrice > PriceHelper.ExpensivePrice && price.LowestPrice < price.MedianPrice
                         ? PriceHelper.CalculateSellerPrice(price.LowestPrice, true) 
-                        : PriceHelper.CalculateSellerPrice(price.MedianPrice, true);
+                        : price.MedianPrice > price.LowestPrice
+                        ? PriceHelper.CalculateSellerPrice(price.MedianPrice, true)
+                        : PriceHelper.CalculateSellerPrice(price.LowestPrice, true);
 
                     if (card.IsCardFoil())
                     {
