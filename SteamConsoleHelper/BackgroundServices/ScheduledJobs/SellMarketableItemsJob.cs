@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.Logging;
+
 using SteamConsoleHelper.Abstractions.Enums;
-using SteamConsoleHelper.Abstractions.Market;
-using SteamConsoleHelper.Exceptions;
 using SteamConsoleHelper.Helpers;
 using SteamConsoleHelper.Services;
 

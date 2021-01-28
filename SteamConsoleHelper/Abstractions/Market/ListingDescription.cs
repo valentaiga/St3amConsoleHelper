@@ -2,16 +2,31 @@
 
 namespace SteamConsoleHelper.Abstractions.Market
 {
-    public class ListingDescription
+    public readonly struct ListingDescription
     {
-        public ulong ListingId { get; set; }
+        public ulong ListingId { get; }
 
-        public uint BuyerPrice { get; set; }
+        public uint BuyerPrice { get; }
 
-        public uint SellerPrice { get; set; }
+        public uint SellerPrice { get; }
 
-        public DateTime MarketSellDate { get; set; }
+        public DateTime MarketSellDate { get; }
 
-        public string HashName { get; set; }
+        public string HashName { get; }
+
+        public bool AwaitingConfirmation { get; }
+
+        public ListingDescription(ulong listingId, uint buyerPrice, uint sellerPrice, DateTime marketSellDate, string hashName, bool awaitingConfirmation)
+        {
+            ListingId = listingId;
+            BuyerPrice = buyerPrice;
+            SellerPrice = sellerPrice;
+            MarketSellDate = marketSellDate;
+            HashName = hashName;
+            AwaitingConfirmation = awaitingConfirmation;
+        }
+
+        public static ListingDescription Empty
+            => new ListingDescription(0, 0, 0, DateTime.MinValue, null, false);
     }
 }

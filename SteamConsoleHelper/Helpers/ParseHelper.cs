@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Web;
-using Serilog;
+
 using SteamConsoleHelper.Abstractions.Market;
 using SteamConsoleHelper.Extensions;
 
@@ -14,7 +13,7 @@ namespace SteamConsoleHelper.Helpers
     {
         private static readonly Regex PriceRegex = new Regex(@"([0-9])+(,)?([0-9]{0,2})");
         private static readonly Regex ListingHoverRegex = new Regex(@"mylisting_([0-9]+)_name(['0-9]+), (['0-9])+, (['0-9])+, (['0-9])+");
-        private static readonly Regex ListingDescriptionRegex = new Regex(@"This is the price the buyer pays(.{3}[,0-9]+.{89}[,0-9]+.{118}[0-9a-zA-Z ]+.{70}[0-9]+.{139}[0-9]+/[0-9a-zA-Z\.\-% ]+)");
+        private static readonly Regex ListingDescriptionRegex = new Regex(@"(This is the price the buyer pays.{3}[,0-9]+.{89}[,0-9]+.{118}[0-9a-zA-Z ]+.{70}[0-9]+.{139}[0-9]+/[0-9a-zA-Z\.\-% ]+)|(My listings awaiting confirmation)");
         private static readonly Regex NotDigitsRegex = new Regex(@"[^0-9]+");
         private static readonly Regex SpecialSymbolsRegex = new Regex(@"(\r)*(\t)*(\n)*");
 
@@ -50,12 +49,20 @@ namespace SteamConsoleHelper.Helpers
 
         public static List<ListingDescription> ParseHtmlResult(string str)
         {
+            var isAwaitingConfirmation = false;
             return ListingDescriptionRegex
-                .Matches(str.RemoveSpecialSymbols()).Select((x, index) =>
+                .Matches(str.RemoveSpecialSymbols()).Select(x =>
             {
                 var parameters = x.Value
                     .RemoveSpecialSymbols()
                     .Split(new[] { "<br>", "class", "<id" }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (parameters.Length == 1)
+                {
+                    isAwaitingConfirmation = true;
+                    return ListingDescription.Empty;
+                }
+
                 var buyerPrice = ParsePrice(parameters[0]).Value;
                 var sellerPrice = ParsePrice(parameters[1]).Value;
                 var sellDate = parameters[2]
@@ -69,16 +76,14 @@ namespace SteamConsoleHelper.Helpers
                     sellDate.AddYears(-1);
                 }
 
-                return new ListingDescription
-                {
-                    ListingId = listingId,
-                    BuyerPrice = buyerPrice,
-                    SellerPrice = sellerPrice,
-                    MarketSellDate = sellDate,
-                    HashName = hashName
-                };
-
-            }).ToList();
+                return new ListingDescription(
+                    listingId,
+                    buyerPrice,
+                    sellerPrice,
+                    sellDate,
+                    hashName,
+                    isAwaitingConfirmation);
+            }).Where(x => x.ListingId != 0).ToList();
         }
 
         public static uint? ParsePrice(string str)

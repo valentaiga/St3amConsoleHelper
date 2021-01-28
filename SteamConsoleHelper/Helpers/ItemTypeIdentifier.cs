@@ -12,11 +12,11 @@ namespace SteamConsoleHelper.Helpers
     public static class ItemTypeIdentifier
     {
         private const string FoilTagName = "Foil";
-        private static readonly Dictionary<ItemType, string> typeDescriptionDictionary;
+        private static readonly Dictionary<ItemType, string> TypeDescriptionDictionary;
 
         static ItemTypeIdentifier()
         {
-            typeDescriptionDictionary = typeof(ItemType).GetFields().Skip(1).ToDictionary(
+            TypeDescriptionDictionary = typeof(ItemType).GetFields().Skip(1).ToDictionary(
                 x => (ItemType)x.GetValue(null),
                 field =>
             {
@@ -38,7 +38,7 @@ namespace SteamConsoleHelper.Helpers
                 return ItemType.Undefined;
             }
 
-            var (itemType, obj) = typeDescriptionDictionary.FirstOrDefault(x => value.Contains(x.Value, StringComparison.InvariantCultureIgnoreCase));
+            var (itemType, obj) = TypeDescriptionDictionary.FirstOrDefault(x => value.Contains(x.Value, StringComparison.InvariantCultureIgnoreCase));
 
             return obj != null
                    ? itemType

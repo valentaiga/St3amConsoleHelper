@@ -39,5 +39,10 @@ namespace SteamConsoleHelper.Services.Fakes
 
         public LoginResult Login(string username, string password, LoginType loginType, string verificationValue)
             => Login(username, password);
+
+        public void InitiateLogin()
+        {
+            Login(null, null);
+        }
     }
 }

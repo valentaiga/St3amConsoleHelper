@@ -62,7 +62,8 @@ namespace SteamConsoleHelper.Helpers
                 SellerPrice = listingDescription.SellerPrice,
                 BuyerPrice = listingDescription.BuyerPrice,
                 SellDate = listingDescription.MarketSellDate,
-                HashName = listingDescription.HashName
+                HashName = listingDescription.HashName,
+                AwaitingConfirmation = listingDescription.AwaitingConfirmation
             };
         }
 

@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+
+using Microsoft.Extensions.Logging;
 
 using SteamAuth;
 
@@ -26,8 +28,7 @@ namespace SteamConsoleHelper.Services
         public InternalUserLogin Login(string username, string password)
         {
             // todo: request twoFactorCode/emailCode/captcha in tg
-            // todo: start bot using tg command: like '/start <login> <password> <twoFactorCode>'
-            if (_userLogin.Username != username || _userLogin.Password != password)
+            if (_userLogin?.Username != username || _userLogin?.Password != password)
             {
                 _userLogin = new UserLogin(username, password);
             }
@@ -37,7 +38,7 @@ namespace SteamConsoleHelper.Services
 
         public InternalUserLogin Login(string username, string password, LoginType loginType, string verificationValue)
         {
-            if (_userLogin.Username != username || _userLogin.Password != password)
+            if (_userLogin?.Username != username || _userLogin?.Password != password)
             {
                 _userLogin = new UserLogin(username, password);
             }
@@ -56,6 +57,62 @@ namespace SteamConsoleHelper.Services
             }
 
             return DoLogin();
+        }
+
+        public void InitiateLogin()
+        {
+            // todo: store loginResult in file/storage and read it after restart instead of new login
+            var login = ReadLogin();
+            var password = ReadPassword();
+            var loginResult = Login(login, password);
+
+            while (loginResult.IsError)
+            {
+                _logger.LogInformation($"Login failed. Reason: '{loginResult.ErrorText}'");
+                if (loginResult.Result == LoginResult.BadCredentials)
+                {
+                    login = ReadLogin();
+                    password = ReadPassword();
+                    loginResult = Login(login, password);
+                }
+
+                if (loginResult.IsTwoFactorNeeded)
+                {
+                    Console.WriteLine($"Credentials are OK. But not signed in, reason: {loginResult.ErrorText}");
+                    var steamGuardCode = ReadTwoFactor();
+
+                    switch (loginResult.Result)
+                    {
+                        case LoginResult.NeedCaptcha:
+                            loginResult = Login(login, password, LoginType.ByCaptcha, steamGuardCode);
+                            break;
+                        case LoginResult.Need2FA:
+                            loginResult = Login(login, password, LoginType.ByTwoFactor, steamGuardCode);
+                            break;
+                        case LoginResult.NeedEmail:
+                            loginResult = Login(login, password, LoginType.ByEmail, steamGuardCode);
+                            break;
+                    }
+                }
+            }
+
+            string ReadLogin()
+            {
+                Console.WriteLine("Enter your login: ");
+                return Console.ReadLine();
+            }
+
+            string ReadPassword()
+            {
+                Console.WriteLine("Enter your password: ");
+                return Console.ReadLine();
+            }
+
+            string ReadTwoFactor()
+            {
+                Console.WriteLine("Enter your two factor code: ");
+                return Console.ReadLine();
+            }
         }
 
         private InternalUserLogin DoLogin()

@@ -8,5 +8,7 @@ namespace SteamConsoleHelper.Abstractions.Fakes
         LoginResult Login(string username, string password);
 
         LoginResult Login(string username, string password, LoginType loginType, string verificationValue);
+
+        void InitiateLogin();
     }
 }

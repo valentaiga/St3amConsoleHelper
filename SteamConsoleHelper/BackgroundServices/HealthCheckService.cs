@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using SteamConsoleHelper.Abstractions.Fakes;
 using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Exceptions;
 
@@ -18,12 +19,14 @@ namespace SteamConsoleHelper.BackgroundServices
         private static readonly TimeSpan CheckDelay = TimeSpan.FromMinutes(5);
 
         private readonly ILogger<HealthCheckService> _logger;
+        private readonly ISteamAuthenticationService _steamAuthenticationService;
         private readonly SteamUrlService _steamUrlService;
         private readonly WebRequestService _requestService;
 
-        public HealthCheckService(ILogger<HealthCheckService> logger, SteamUrlService steamUrlService, WebRequestService requestService)
+        public HealthCheckService(ILogger<HealthCheckService> logger, ISteamAuthenticationService steamAuthenticationService, SteamUrlService steamUrlService, WebRequestService requestService)
         {
             _logger = logger;
+            _steamAuthenticationService = steamAuthenticationService;
             _steamUrlService = steamUrlService;
             _requestService = requestService;
         }
@@ -35,14 +38,13 @@ namespace SteamConsoleHelper.BackgroundServices
             {
                 try
                 {
-
                     await _requestService.GetRequestAsync(url);
                 }
                 catch (InternalException ex)
                 {
-                    if (ex.Error == InternalError.RequestBadRequest)
+                    if (ex.Error == InternalError.RequestBadRequest || ex.Error == InternalError.RequestUnauthorized)
                     {
-                        _logger.LogWarning("Token is invalid, please refresh it.");
+                        _steamAuthenticationService.InitiateLogin();
                     }
                 }
                 await Task.Delay(CheckDelay, stoppingToken);

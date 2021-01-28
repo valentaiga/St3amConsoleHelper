@@ -104,11 +104,8 @@ namespace SteamConsoleHelper
         {
             var provider = services.BuildServiceProvider();
 
-            if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
-            {
-                var steamAuthService = provider.GetRequiredService<ISteamAuthenticationService>();
-                steamAuthService.Login(null, null);
-            }
+            var steamAuthService = provider.GetRequiredService<ISteamAuthenticationService>();
+            steamAuthService.InitiateLogin();
 
             provider.GetRequiredService<ProfileSettings>().InitializeAsync().GetAwaiter().GetResult();
         }

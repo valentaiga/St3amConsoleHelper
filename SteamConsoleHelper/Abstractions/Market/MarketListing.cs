@@ -21,5 +21,7 @@ namespace SteamConsoleHelper.Abstractions.Market
         public uint ContextId { get; set; }
 
         public ulong ClassId { get; set; }
+
+        public bool AwaitingConfirmation { get; set; }
     }
 }
