@@ -98,12 +98,22 @@ namespace SteamConsoleHelper.Services
 
             string ReadLogin()
             {
+                if (!string.IsNullOrEmpty(ProfileSettings.UserLogin?.Username))
+                {
+                    return ProfileSettings.UserLogin.Username;
+                }
                 Console.WriteLine("Enter your login: ");
                 return Console.ReadLine();
+
             }
 
             string ReadPassword()
             {
+                if (!string.IsNullOrEmpty(ProfileSettings.UserLogin?.Password))
+                {
+                    return ProfileSettings.UserLogin.Password;
+                }
+
                 Console.WriteLine("Enter your password: ");
                 return Console.ReadLine();
             }
@@ -153,12 +163,20 @@ namespace SteamConsoleHelper.Services
 
                 case LoginResult.LoginOkay:
                 {
+                    ClearTwoFactorCode();
+                    ProfileSettings.SetIsAuthenticatedStatus(true);
                     _profileSettings.SetUserLogin(_userLogin);
                     return new InternalUserLogin(LoginResult.LoginOkay);
                 }
                 default:
                     return new InternalUserLogin(result, "Unexpected login failure");
             }
+
+            void ClearTwoFactorCode()
+            {
+                // prevent using expired second factor
+                _userLogin.EmailCode = _userLogin.TwoFactorCode = _userLogin.CaptchaText = null;
+        }
         }
     }
 }

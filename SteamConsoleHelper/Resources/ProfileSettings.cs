@@ -28,6 +28,8 @@ namespace SteamConsoleHelper.Resources
             _httpClient = new HttpClient(handler);
         }
 
+        public static bool IsAuthenticated { get; private set; }
+
         // todo: remove static and somehow update ProfileSettings in jobs
         public static UserLogin UserLogin { get; private set; }
 
@@ -36,8 +38,8 @@ namespace SteamConsoleHelper.Resources
         public static string ProfileUrl { get; private set; }
 
         public string SteamId => Environment.GetEnvironmentVariable("SteamId")
-                                          ?? UserLogin?.Session.SteamID.ToString()
-                                          ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
+                                 ?? UserLogin?.Session.SteamID.ToString()
+                                 ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
         public string SessionId => Environment.GetEnvironmentVariable("SessionId")
                                           ?? UserLogin?.Session.SessionID
@@ -61,5 +63,8 @@ namespace SteamConsoleHelper.Resources
 
             Log.Information($"Profile initialized: ProfileUrl: '{ProfileUrl}', UrlNickname: '{UrlNickname}'");
         }
+
+        public static void SetIsAuthenticatedStatus(bool isAuthenticated)
+            => IsAuthenticated = isAuthenticated;
     }
 }

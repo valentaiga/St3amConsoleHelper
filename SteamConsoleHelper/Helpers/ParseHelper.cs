@@ -14,6 +14,7 @@ namespace SteamConsoleHelper.Helpers
         private static readonly Regex PriceRegex = new Regex(@"([0-9])+(,)?([0-9]{0,2})");
         private static readonly Regex ListingHoverRegex = new Regex(@"mylisting_([0-9]+)_name(['0-9]+), (['0-9])+, (['0-9])+, (['0-9])+");
         private static readonly Regex ListingDescriptionRegex = new Regex(@"(This is the price the buyer pays.{3}[,0-9]+.{89}[,0-9]+.{118}[0-9a-zA-Z ]+.{70}[0-9]+.{139}[0-9]+/[0-9a-zA-Z\.\-% ]+)|(My listings awaiting confirmation)");
+        private static readonly Regex ListingDateRegex = new Regex(@"("">.+</)");
         private static readonly Regex NotDigitsRegex = new Regex(@"[^0-9]+");
         private static readonly Regex SpecialSymbolsRegex = new Regex(@"(\r)*(\t)*(\n)*");
 
@@ -30,20 +31,29 @@ namespace SteamConsoleHelper.Helpers
         {
             return ListingHoverRegex.Matches(str).Select(x =>
             {
-                var parameters = x.Value.Split(',');
-
-                var listingId = parameters[0].KeepNumbersOnly().ToULong();
-                var appId = parameters[1].ToUInt();
-                var contextId = parameters[2].KeepNumbersOnly().ToUInt();
-                var assetId = parameters[3].KeepNumbersOnly().ToULong();
-
-                return new ListingHover
+                try
                 {
-                    ListingId = listingId,
-                    AppId = appId,
-                    ContextId = contextId,
-                    AssetId = assetId
-                };
+                    var parameters = x.Value.Split(',');
+
+                    var listingId = parameters[0].KeepNumbersOnly().ToULong();
+                    var appId = parameters[1].ToUInt();
+                    var contextId = parameters[2].KeepNumbersOnly().ToUInt();
+                    var assetId = parameters[3].KeepNumbersOnly().ToULong();
+
+                    return new ListingHover
+                    {
+                        ListingId = listingId,
+                        AppId = appId,
+                        ContextId = contextId,
+                        AssetId = assetId
+                    };
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+                
             }).ToList();
         }
 
@@ -53,36 +63,44 @@ namespace SteamConsoleHelper.Helpers
             return ListingDescriptionRegex
                 .Matches(str.RemoveSpecialSymbols()).Select(x =>
             {
-                var parameters = x.Value
-                    .RemoveSpecialSymbols()
-                    .Split(new[] { "<br>", "class", "<id" }, StringSplitOptions.RemoveEmptyEntries);
-
-                if (parameters.Length == 1)
+                try
                 {
-                    isAwaitingConfirmation = true;
-                    return ListingDescription.Empty;
+                    var parameters = x.Value
+                                .RemoveSpecialSymbols()
+                                .Split(new[] { "<br>", "class", "<id" }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (parameters.Length == 1)
+                    {
+                        isAwaitingConfirmation = true;
+                        return ListingDescription.Empty;
+                    }
+
+                    var buyerPrice = ParsePrice(parameters[0]).Value;
+                    var sellerPrice = ParsePrice(parameters[1]).Value;
+                    var sellDateRegexValue = ListingDateRegex.Match(parameters[2]).Value;
+                    var sellDate = sellDateRegexValue.Substring(2, sellDateRegexValue.IndexOf("<") - 2).ToDateTime();
+                    var listingId = parameters[3].KeepNumbersOnly().ToULong();
+                    var hashName = HttpUtility.UrlDecode(parameters[5].Substring(parameters[5].LastIndexOf("/") + 1));
+
+                    if (DateTime.Today.Month == 1 && sellDate.Month == 12)
+                    {
+                        // offset for new year prices
+                        sellDate.AddYears(-1);
+                    }
+
+                    return new ListingDescription(
+                        listingId,
+                        buyerPrice,
+                        sellerPrice,
+                        sellDate,
+                        hashName,
+                        isAwaitingConfirmation);
                 }
-
-                var buyerPrice = ParsePrice(parameters[0]).Value;
-                var sellerPrice = ParsePrice(parameters[1]).Value;
-                var sellDate = parameters[2]
-                    .Substring(68, parameters[2].Length - parameters[2].IndexOf("</div") - 5).ToDateTime();
-                var listingId = parameters[3].KeepNumbersOnly().ToULong();
-                var hashName = HttpUtility.UrlDecode(parameters[5].Substring(parameters[5].LastIndexOf("/") + 1));
-
-                if (DateTime.Today.Month == 1 && sellDate.Month == 12)
+                catch (Exception e)
                 {
-                    // offset for new year prices
-                    sellDate.AddYears(-1);
+                    Console.WriteLine(e.Message);
+                    throw;
                 }
-
-                return new ListingDescription(
-                    listingId,
-                    buyerPrice,
-                    sellerPrice,
-                    sellDate,
-                    hashName,
-                    isAwaitingConfirmation);
             }).Where(x => x.ListingId != 0).ToList();
         }
 

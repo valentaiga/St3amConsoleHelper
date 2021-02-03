@@ -34,6 +34,7 @@ namespace SteamConsoleHelper.Services.Fakes
         public LoginResult Login(string username, string password)
         {
             _profileSettings.SetUserLogin(_fakeUserLogin);
+            ProfileSettings.SetIsAuthenticatedStatus(true);
             return new LoginResult(SteamAuth.LoginResult.LoginOkay);
         }
 

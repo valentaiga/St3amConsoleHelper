@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +11,7 @@ using Newtonsoft.Json.Serialization;
 
 using SteamConsoleHelper.ApiModels.Responses;
 using SteamConsoleHelper.Exceptions;
+using SteamConsoleHelper.Resources;
 
 namespace SteamConsoleHelper.Common
 {
@@ -36,8 +36,14 @@ namespace SteamConsoleHelper.Common
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task GetRequestAsync(string url, IEnumerable<(string name, string value)> parameters = null)
+        public async ValueTask GetRequestAsync(string url, IEnumerable<(string name, string value)> parameters = null)
         {
+            if (!ProfileSettings.IsAuthenticated)
+            {
+                _logger.LogWarning("Request is failed, authentication tokens are invalid");
+                throw new InternalException(InternalError.UserIsNotAuthenticated);
+            }
+
             var getUrl = url;
 
             if (parameters != null && parameters.Any())
@@ -49,14 +55,20 @@ namespace SteamConsoleHelper.Common
             var response = await httpClient.GetAsync(getUrl);
             if (EnableUrlLogs)
             {
-                _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}' ");
+                _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}'");
             }
             ValidateResponse(response);
         }
 
-        public async Task<T> GetRequestAsync<T>(string url, IEnumerable<(string name, string value)> parameters = null)
+        public async ValueTask<T> GetRequestAsync<T>(string url, IEnumerable<(string name, string value)> parameters = null)
             where T : SteamResponseBase
         {
+            if (!ProfileSettings.IsAuthenticated)
+            {
+                _logger.LogWarning("Request is failed, authentication tokens are invalid");
+                throw new InternalException(InternalError.UserIsNotAuthenticated);
+            }
+
             var getUrl = url;
 
             if (parameters != null && parameters.Any())
@@ -74,9 +86,15 @@ namespace SteamConsoleHelper.Common
             return await DeserializeResponseAsync<T>(response);
         }
 
-        public async Task<T> PostRequestAsync<T>(string url, object data)
+        public async ValueTask<T> PostRequestAsync<T>(string url, object data)
             where T : SteamResponseBase
         {
+            if (!ProfileSettings.IsAuthenticated)
+            {
+                _logger.LogWarning("Request is failed, authentication tokens are invalid");
+                throw new InternalException(InternalError.UserIsNotAuthenticated);
+            }
+
             var contentToPush = GetFormContent();
             
             using var httpClient = _httpClientFactory.Create();
@@ -98,8 +116,14 @@ namespace SteamConsoleHelper.Common
             }
         }
 
-        public async Task PostRequestAsync(string url, object data)
+        public async ValueTask PostRequestAsync(string url, object data)
         {
+            if (!ProfileSettings.IsAuthenticated)
+            {
+                _logger.LogWarning("Request is failed, authentication tokens are invalid");
+                throw new InternalException(InternalError.UserIsNotAuthenticated);
+            }
+
             var contentToPush = GetFormContent();
             
             using var httpClient = _httpClientFactory.Create();

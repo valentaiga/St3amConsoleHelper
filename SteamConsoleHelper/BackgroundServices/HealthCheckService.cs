@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using SteamConsoleHelper.Abstractions.Fakes;
 using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Exceptions;
+using SteamConsoleHelper.Resources;
 
 namespace SteamConsoleHelper.BackgroundServices
 {
@@ -16,7 +17,7 @@ namespace SteamConsoleHelper.BackgroundServices
     /// </summary>
     public class HealthCheckService : BackgroundService
     {
-        private static readonly TimeSpan CheckDelay = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan CheckDelay = TimeSpan.FromMinutes(1);
 
         private readonly ILogger<HealthCheckService> _logger;
         private readonly ISteamAuthenticationService _steamAuthenticationService;
@@ -42,8 +43,9 @@ namespace SteamConsoleHelper.BackgroundServices
                 }
                 catch (InternalException ex)
                 {
-                    if (ex.Error == InternalError.RequestBadRequest || ex.Error == InternalError.RequestUnauthorized)
+                    if (ex.Error == InternalError.RequestBadRequest || ex.Error == InternalError.RequestUnauthorized || ex.Error == InternalError.UserIsNotAuthenticated)
                     {
+                        ProfileSettings.SetIsAuthenticatedStatus(false);
                         _steamAuthenticationService.InitiateLogin();
                     }
                 }
