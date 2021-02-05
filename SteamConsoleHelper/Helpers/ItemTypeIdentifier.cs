@@ -12,6 +12,7 @@ namespace SteamConsoleHelper.Helpers
     public static class ItemTypeIdentifier
     {
         private const string FoilTagName = "Foil";
+        private const string SackOfGemsName = "Sack of Gems";
         private static readonly Dictionary<ItemType, string> TypeDescriptionDictionary;
 
         static ItemTypeIdentifier()
@@ -31,14 +32,19 @@ namespace SteamConsoleHelper.Helpers
             });
         }
 
-        public static ItemType ParseTypeFromDescription(string value)
+        public static ItemType ParseTypeFromDescription(string tag, string marketName)
         {
-            if (string.IsNullOrWhiteSpace(value))
+            if (string.IsNullOrWhiteSpace(tag))
             {
                 return ItemType.Undefined;
             }
 
-            var (itemType, obj) = TypeDescriptionDictionary.FirstOrDefault(x => value.Contains(x.Value, StringComparison.InvariantCultureIgnoreCase));
+            var (itemType, obj) = TypeDescriptionDictionary.FirstOrDefault(x => tag.Contains(x.Value, StringComparison.InvariantCultureIgnoreCase));
+
+            if (itemType == ItemType.Gems && marketName == SackOfGemsName)
+            {
+                itemType = ItemType.SackOfGems;
+            }
 
             return obj != null
                    ? itemType

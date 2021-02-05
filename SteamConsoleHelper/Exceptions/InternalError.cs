@@ -15,6 +15,7 @@
         FailedToAddGameToCraftList,
         FailedToRemoveGameFromCraftList,
         InventoryItemIsNotACard,
+        InventoryItemIsNotASackOfGems,
         UserIsNotAuthenticated
     }
 }

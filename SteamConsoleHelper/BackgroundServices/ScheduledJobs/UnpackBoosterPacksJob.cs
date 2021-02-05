@@ -40,13 +40,12 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             var packsToOpen = inventoryItems.FilterByType(ItemType.BoosterPack);
 
             _logger.LogDebug($"Packs to open: '{packsToOpen.Count}'");
-
-            foreach (var pack in packsToOpen)
-            {
+            
+            Parallel.ForEach(packsToOpen, pack =>
                 _delayedExecutionPool.EnqueueTaskToPool(async () =>
                 {
                     _logger.LogInformation($"Opening booster pack '{pack.MarketHashName}' from '{pack.AppId}' game");
-                    var cards = await _boosterPackService.UnpackBooster(pack.AppId, pack.AssetId);
+                    var cards = await _boosterPackService.UnpackBoosterAsync(pack.AppId, pack.AssetId);
                     cards.ForEach(x =>
                     {
                         if (x.IsFoil)
@@ -55,8 +54,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                             _logger.LogInformation($"Got foil from '{pack.MarketName}' pack! Foil name - '{x.Name}'");
                         }
                     });
-                });
-            }
+                }));
         }
     }
 }

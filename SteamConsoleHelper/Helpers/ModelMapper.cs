@@ -27,7 +27,7 @@ namespace SteamConsoleHelper.Helpers
         public static InventoryItem ToModel(this InventoryAssetResponseModel asset, InventoryDescriptionResponseModel description)
         {
             var tagName = description.Tags?.Find(x => x.Category == "item_class")?.LocalizedTagName;
-            var type = ItemTypeIdentifier.ParseTypeFromDescription(tagName);
+            var type = ItemTypeIdentifier.ParseTypeFromDescription(tagName, description.MarketName);
 
             return new InventoryItem
             {

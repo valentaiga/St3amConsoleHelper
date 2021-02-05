@@ -89,6 +89,7 @@ namespace SteamConsoleHelper
                         .AddTransient<InventoryService>()
                         .AddTransient<MarketService>()
                         .AddTransient<BoosterPackService>()
+                        .AddTransient<GemsService>()
 
                         // job services
                         .AddSingleton<JobManager>()
@@ -97,7 +98,7 @@ namespace SteamConsoleHelper
                         // jobs
                         .AddHostedService<CheckMarketPriceJob>()
                         .AddHostedService<UnpackBoosterPacksJob>()
-                        .AddHostedService<SellMarketableItemsJob>();
+                        .AddHostedService<InventoryItemsProcessJob>();
                 });
 
         private static void InitializeServices(IServiceCollection services)

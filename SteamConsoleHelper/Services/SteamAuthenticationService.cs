@@ -69,7 +69,7 @@ namespace SteamConsoleHelper.Services
             while (loginResult.IsError)
             {
                 _logger.LogInformation($"Login failed. Reason: '{loginResult.ErrorText}'");
-                if (loginResult.Result == LoginResult.BadCredentials)
+                if (loginResult.Result == LoginResult.BadCredentials || loginResult.Result == LoginResult.GeneralFailure)
                 {
                     login = ReadLogin();
                     password = ReadPassword();
@@ -156,6 +156,7 @@ namespace SteamConsoleHelper.Services
                     }
 
                 case LoginResult.BadCredentials:
+                case LoginResult.GeneralFailure:
                     return new InternalUserLogin(result, "Bad credentials");
 
                 case LoginResult.TooManyFailedLogins:

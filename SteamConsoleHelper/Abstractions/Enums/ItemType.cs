@@ -5,8 +5,8 @@ namespace SteamConsoleHelper.Abstractions.Enums
     public enum ItemType
     {
         Undefined,
-
         Gems,
+        SackOfGems,
 
         [Description("Trading Card")]
         TradingCard,

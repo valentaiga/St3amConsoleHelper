@@ -6,7 +6,8 @@ namespace SteamConsoleHelper.Common
     {
         // 0 - steamId
         private const string GetGemsForItemBaseUrl = "https://steamcommunity.com/auction/ajaxgetgoovalueforitemtype/?appid={0}&item_type={1}&border_color=0";
-        private const string GrindItemIntoGooBaseUrl = "https://steamcommunity.com/id/{0}/ajaxgrindintogoo/";
+        private const string GrindSackToGemsBaseUrl = "https://steamcommunity.com/id/{0}/ajaxexchangegoo/";
+        private const string GrindItemIntoGemsBaseUrl = "https://steamcommunity.com/id/{0}/ajaxgrindintogoo/";
         private const string UnpackBoosterBaseUrl = "https://steamcommunity.com/id/{0}/ajaxunpackbooster/";
         private const string CreateBoosterBaseUrl = "https://steamcommunity.com/tradingcards/ajaxcreatebooster/";
         private const string GetInventoryBaseUrl = "https://steamcommunity.com/inventory/{0}/753/6?l=english&count=5000";
@@ -25,11 +26,13 @@ namespace SteamConsoleHelper.Common
 
         public string GetGemsForItemUrl(uint appId, uint itemType) => string.Format(GetGemsForItemBaseUrl, appId, itemType);
 
+        public string GrindSackToGemsUrl() => string.Format(GrindSackToGemsBaseUrl, ProfileSettings.UrlNickname);
+
         public string UnpackBoosterUrl() => string.Format(UnpackBoosterBaseUrl, ProfileSettings.UrlNickname);
 
         public string CreateBoosterUrl() => CreateBoosterBaseUrl;
 
-        public string GrindItemIntoGooUrl() => string.Format(GrindItemIntoGooBaseUrl, ProfileSettings.UrlNickname);
+        public string GrindItemIntoGemsUrl() => string.Format(GrindItemIntoGemsBaseUrl, ProfileSettings.UrlNickname);
 
         public string GetItemPriceUrl(uint appId, string hashName) => string.Format(GetItemPriceBaseUrl, appId, hashName);
 

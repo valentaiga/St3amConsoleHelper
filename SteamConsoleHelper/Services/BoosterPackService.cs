@@ -25,7 +25,7 @@ namespace SteamConsoleHelper.Services
             _profileSettings = profileSettings;
         }
 
-        public async Task<List<BoosterCard>> UnpackBooster(uint appId, ulong assetId)
+        public async Task<List<BoosterCard>> UnpackBoosterAsync(uint appId, ulong assetId)
         {
             var url = _steamUrlService.UnpackBoosterUrl();
 
@@ -38,7 +38,7 @@ namespace SteamConsoleHelper.Services
             return response.Cards.Select(x => x.ToModel()).ToList();
         }
 
-        public async Task CraftBooster(uint appId)
+        public async Task CraftBoosterAsync(uint appId)
         {
             var url = _steamUrlService.CreateBoosterUrl();
 

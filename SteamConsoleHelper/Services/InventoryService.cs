@@ -30,7 +30,7 @@ namespace SteamConsoleHelper.Services
 
         public async Task GrindItemIntoGooAsync(uint appId, ulong assetId, uint contextId)
         {
-            var url = _steamUrlService.GrindItemIntoGooUrl();
+            var url = _steamUrlService.GrindItemIntoGemsUrl();
             var data = new GrindItemIntoGemsPostModel(
                 _profileSettings.SessionId,
                 appId,
