@@ -23,6 +23,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Include="..\.editorconfig" Link=".editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\SteamConsoleHelper.Telegram\SteamConsoleHelper.Telegram.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Reference Include="SteamAuth">
 	    <HintPath>..\lib\SteamAuth.dll</HintPath>
 	  </Reference>

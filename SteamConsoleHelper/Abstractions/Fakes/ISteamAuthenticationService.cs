@@ -1,4 +1,5 @@
-﻿using SteamConsoleHelper.Abstractions.Enums;
+﻿using System.Threading.Tasks;
+using SteamConsoleHelper.Abstractions.Enums;
 using SteamConsoleHelper.Abstractions.Login;
 
 namespace SteamConsoleHelper.Abstractions.Fakes
@@ -9,6 +10,6 @@ namespace SteamConsoleHelper.Abstractions.Fakes
 
         LoginResult Login(string username, string password, LoginType loginType, string verificationValue);
 
-        void InitiateLogin();
+        Task InitiateLoginAsync();
     }
 }

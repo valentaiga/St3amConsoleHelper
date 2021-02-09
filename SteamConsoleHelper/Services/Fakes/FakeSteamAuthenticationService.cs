@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
 
 using SteamAuth;
 
@@ -41,9 +43,10 @@ namespace SteamConsoleHelper.Services.Fakes
         public LoginResult Login(string username, string password, LoginType loginType, string verificationValue)
             => Login(username, password);
 
-        public void InitiateLogin()
+        public Task InitiateLoginAsync()
         {
             Login(null, null);
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
@@ -7,6 +7,7 @@ using SteamAuth;
 using SteamConsoleHelper.Abstractions.Enums;
 using SteamConsoleHelper.Abstractions.Fakes;
 using SteamConsoleHelper.Resources;
+using SteamConsoleHelper.Telegram;
 
 using InternalUserLogin = SteamConsoleHelper.Abstractions.Login.LoginResult;
 
@@ -15,19 +16,23 @@ namespace SteamConsoleHelper.Services
     public class SteamAuthenticationService : ISteamAuthenticationService
     {
         private readonly ILogger<SteamAuthenticationService> _logger;
+        private readonly TelegramBotService _telegramBotService;
         private readonly ProfileSettings _profileSettings;
 
         private UserLogin _userLogin;
 
-        public SteamAuthenticationService(ILogger<SteamAuthenticationService> logger, ProfileSettings profileSettings)
+        public SteamAuthenticationService(
+            ILogger<SteamAuthenticationService> logger,
+            TelegramBotService telegramBotService,
+            ProfileSettings profileSettings)
         {
             _logger = logger;
+            _telegramBotService = telegramBotService;
             _profileSettings = profileSettings;
         }
 
         public InternalUserLogin Login(string username, string password)
         {
-            // todo: request twoFactorCode/emailCode/captcha in tg
             if (_userLogin?.Username != username || _userLogin?.Password != password)
             {
                 _userLogin = new UserLogin(username, password);
@@ -59,11 +64,11 @@ namespace SteamConsoleHelper.Services
             return DoLogin();
         }
 
-        public void InitiateLogin()
+        public async Task InitiateLoginAsync()
         {
             // todo: store loginResult in file/storage and read it after restart instead of new login
-            var login = ReadLogin();
-            var password = ReadPassword();
+            var login = await ReadLoginAsync();
+            var password = await ReadPasswordAsync();
             var loginResult = Login(login, password);
 
             while (loginResult.IsError)
@@ -71,15 +76,15 @@ namespace SteamConsoleHelper.Services
                 _logger.LogInformation($"Login failed. Reason: '{loginResult.ErrorText}'");
                 if (loginResult.Result == LoginResult.BadCredentials || loginResult.Result == LoginResult.GeneralFailure)
                 {
-                    login = ReadLogin();
-                    password = ReadPassword();
+                    login = await ReadLoginAsync();
+                    password = await ReadPasswordAsync();
                     loginResult = Login(login, password);
                 }
 
                 if (loginResult.IsTwoFactorNeeded)
                 {
-                    Console.WriteLine($"Credentials are OK. But not signed in, reason: {loginResult.ErrorText}");
-                    var steamGuardCode = ReadTwoFactor();
+                    await _telegramBotService.SendMessageAsync($"Credentials are OK. But not signed in, reason: {loginResult.ErrorText}");
+                    var steamGuardCode = await ReadTwoFactorAsync();
 
                     switch (loginResult.Result)
                     {
@@ -96,33 +101,32 @@ namespace SteamConsoleHelper.Services
                 }
             }
 
-            string ReadLogin()
-            {
-                if (!string.IsNullOrEmpty(ProfileSettings.UserLogin?.Username))
-                {
-                    return ProfileSettings.UserLogin.Username;
-                }
-                Console.WriteLine("Enter your login: ");
-                return Console.ReadLine();
+            await _telegramBotService.SendMessageAsync("Successfully signed in");
+        }
 
+        private async Task<string> ReadLoginAsync()
+        {
+            if (!string.IsNullOrEmpty(ProfileSettings.UserLogin?.Username))
+            {
+                return ProfileSettings.UserLogin.Username;
             }
 
-            string ReadPassword()
-            {
-                if (!string.IsNullOrEmpty(ProfileSettings.UserLogin?.Password))
-                {
-                    return ProfileSettings.UserLogin.Password;
-                }
+            return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your login: ");
+        }
 
-                Console.WriteLine("Enter your password: ");
-                return Console.ReadLine();
+        private async ValueTask<string> ReadPasswordAsync()
+        {
+            if (!string.IsNullOrEmpty(ProfileSettings.UserLogin?.Password))
+            {
+                return ProfileSettings.UserLogin.Password;
             }
 
-            string ReadTwoFactor()
-            {
-                Console.WriteLine("Enter your two factor code: ");
-                return Console.ReadLine();
-            }
+            return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your password: ");
+        }
+
+        private async Task<string> ReadTwoFactorAsync()
+        {
+            return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your two factor code: ");
         }
 
         private InternalUserLogin DoLogin()
@@ -145,6 +149,7 @@ namespace SteamConsoleHelper.Services
                                          _userLogin.CaptchaGID;
                         var message = $"Need to confirm captcha text in telegram : {captchaUrl}";
                         _logger.LogWarning(message);
+                        Task.Run(() => _telegramBotService.SendMessageAsync(message));
                         return new InternalUserLogin(result, message);
                     }
 
@@ -152,6 +157,7 @@ namespace SteamConsoleHelper.Services
                     {
                         var message = "Need to confirm mobile authenticator code text in telegram";
                         _logger.LogWarning(message);
+                        Task.Run(() => _telegramBotService.SendMessageAsync(message));
                         return new InternalUserLogin(result, message);
                     }
 

@@ -7,8 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamConsoleHelper", "Steam
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{101D7C07-2AAE-445B-AA92-EA0F799CB55C}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		lib\SteamAuth.dll = lib\SteamAuth.dll
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamConsoleHelper.Telegram", "SteamConsoleHelper.Telegram\SteamConsoleHelper.Telegram.csproj", "{23D63A97-F498-4337-88E8-DB39AAEE09A3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +23,10 @@ Global
 		{7C990085-BD59-4322-95A0-94577C4655FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C990085-BD59-4322-95A0-94577C4655FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C990085-BD59-4322-95A0-94577C4655FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23D63A97-F498-4337-88E8-DB39AAEE09A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23D63A97-F498-4337-88E8-DB39AAEE09A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23D63A97-F498-4337-88E8-DB39AAEE09A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23D63A97-F498-4337-88E8-DB39AAEE09A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
