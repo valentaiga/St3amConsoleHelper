@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 
 using SteamAuth;
 
-using SteamConsoleHelper.Abstractions.Enums;
 using SteamConsoleHelper.Abstractions.Fakes;
 using SteamConsoleHelper.Extensions;
 using SteamConsoleHelper.Resources;
@@ -33,15 +32,12 @@ namespace SteamConsoleHelper.Services.Fakes
             };
         }
 
-        public LoginResult Login(string username, string password)
+        private LoginResult Login(string username, string password)
         {
             _profileSettings.SetUserLogin(_fakeUserLogin);
             ProfileSettings.SetIsAuthenticatedStatus(true);
             return new LoginResult(SteamAuth.LoginResult.LoginOkay);
         }
-
-        public LoginResult Login(string username, string password, LoginType loginType, string verificationValue)
-            => Login(username, password);
 
         public Task InitiateLoginAsync()
         {

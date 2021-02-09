@@ -31,45 +31,12 @@ namespace SteamConsoleHelper.Services
             _profileSettings = profileSettings;
         }
 
-        public InternalUserLogin Login(string username, string password)
-        {
-            if (_userLogin?.Username != username || _userLogin?.Password != password)
-            {
-                _userLogin = new UserLogin(username, password);
-            }
-
-            return DoLogin();
-        }
-
-        public InternalUserLogin Login(string username, string password, LoginType loginType, string verificationValue)
-        {
-            if (_userLogin?.Username != username || _userLogin?.Password != password)
-            {
-                _userLogin = new UserLogin(username, password);
-            }
-
-            switch (loginType)
-            {
-                case LoginType.ByEmail:
-                    _userLogin.EmailCode = verificationValue;
-                    break;
-                case LoginType.ByTwoFactor:
-                    _userLogin.TwoFactorCode = verificationValue;
-                    break;
-                case LoginType.ByCaptcha:
-                    _userLogin.CaptchaText = verificationValue;
-                    break;
-            }
-
-            return DoLogin();
-        }
-
         public async Task InitiateLoginAsync()
         {
             // todo: store loginResult in file/storage and read it after restart instead of new login
             var login = await ReadLoginAsync();
             var password = await ReadPasswordAsync();
-            var loginResult = Login(login, password);
+            var loginResult = await LoginAsync(login, password);
 
             while (loginResult.IsError)
             {
@@ -78,7 +45,7 @@ namespace SteamConsoleHelper.Services
                 {
                     login = await ReadLoginAsync();
                     password = await ReadPasswordAsync();
-                    loginResult = Login(login, password);
+                    loginResult = await LoginAsync(login, password);
                 }
 
                 if (loginResult.IsTwoFactorNeeded)
@@ -89,13 +56,13 @@ namespace SteamConsoleHelper.Services
                     switch (loginResult.Result)
                     {
                         case LoginResult.NeedCaptcha:
-                            loginResult = Login(login, password, LoginType.ByCaptcha, steamGuardCode);
+                            loginResult = await LoginAsync(login, password, LoginType.ByCaptcha, steamGuardCode);
                             break;
                         case LoginResult.Need2FA:
-                            loginResult = Login(login, password, LoginType.ByTwoFactor, steamGuardCode);
+                            loginResult = await LoginAsync(login, password, LoginType.ByTwoFactor, steamGuardCode);
                             break;
                         case LoginResult.NeedEmail:
-                            loginResult = Login(login, password, LoginType.ByEmail, steamGuardCode);
+                            loginResult = await LoginAsync(login, password, LoginType.ByEmail, steamGuardCode);
                             break;
                     }
                 }
@@ -129,7 +96,40 @@ namespace SteamConsoleHelper.Services
             return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your two factor code: ");
         }
 
-        private InternalUserLogin DoLogin()
+        private async ValueTask<InternalUserLogin> LoginAsync(string username, string password)
+        {
+            if (_userLogin?.Username != username || _userLogin?.Password != password)
+            {
+                _userLogin = new UserLogin(username, password);
+            }
+
+            return await DoLoginAsync();
+        }
+
+        private async ValueTask<InternalUserLogin> LoginAsync(string username, string password, LoginType loginType, string verificationValue)
+        {
+            if (_userLogin?.Username != username || _userLogin?.Password != password)
+            {
+                _userLogin = new UserLogin(username, password);
+            }
+
+            switch (loginType)
+            {
+                case LoginType.ByEmail:
+                    _userLogin.EmailCode = verificationValue;
+                    break;
+                case LoginType.ByTwoFactor:
+                    _userLogin.TwoFactorCode = verificationValue;
+                    break;
+                case LoginType.ByCaptcha:
+                    _userLogin.CaptchaText = verificationValue;
+                    break;
+            }
+
+            return await DoLoginAsync();
+        }
+
+        private async ValueTask<InternalUserLogin> DoLoginAsync()
         {
             var result = _userLogin.DoLogin();
 
@@ -149,7 +149,7 @@ namespace SteamConsoleHelper.Services
                                          _userLogin.CaptchaGID;
                         var message = $"Need to confirm captcha text in telegram : {captchaUrl}";
                         _logger.LogWarning(message);
-                        Task.Run(() => _telegramBotService.SendMessageAsync(message));
+                        await _telegramBotService.SendMessageAsync(message);
                         return new InternalUserLogin(result, message);
                     }
 
@@ -157,7 +157,7 @@ namespace SteamConsoleHelper.Services
                     {
                         var message = "Need to confirm mobile authenticator code text in telegram";
                         _logger.LogWarning(message);
-                        Task.Run(() => _telegramBotService.SendMessageAsync(message));
+                        await _telegramBotService.SendMessageAsync(message);
                         return new InternalUserLogin(result, message);
                     }
 

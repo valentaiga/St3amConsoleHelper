@@ -24,12 +24,20 @@ namespace SteamConsoleHelper.Telegram
         {
             _logger = logger;
 
-            var token = configuration["Telegram:ApiToken"];
             _authorId = int.Parse(configuration["Telegram:AuthorId"]);
             _authorChatId = new ChatId(long.Parse(configuration["Telegram:AuthorChatId"]));
 
-            _telegramBotClient = new TelegramBotClient(token);
-            _telegramBotClient.OnMessage += OnMessageHandler;
+            try
+            {
+                var token = configuration["Telegram:ApiToken"];
+                _telegramBotClient = new TelegramBotClient(token);
+                _telegramBotClient.OnMessage += OnMessageHandler;
+            }
+            catch (Exception e)
+            {
+                logger.LogCritical($"Cant connect to telegram bot. Reason: {e.Message}");
+                throw;
+            }
         }
 
         public async Task SendMessageAsync(string text)
