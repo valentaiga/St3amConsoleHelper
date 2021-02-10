@@ -79,7 +79,14 @@ namespace SteamConsoleHelper.Telegram
             }
 
             _lastMessage = message.Text;
-            await _telegramBotClient.DeleteMessageAsync(message.Chat.Id, message.MessageId);
+            try
+            {
+                await _telegramBotClient.DeleteMessageAsync(message.Chat.Id, message.MessageId);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+            }
         }
     }
 }
