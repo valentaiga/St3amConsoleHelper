@@ -14,14 +14,12 @@ namespace SteamConsoleHelper.Helpers
     {
         public static ItemMarketPrice ToModel(this ItemPriceResponseModel response, uint appId, string hashName)
         {
-            return new ItemMarketPrice
-            {
-                LowestPrice = ParseHelper.ParsePrice(response.LowestPriceString),
-                MedianPrice = ParseHelper.ParsePrice(response.MedianPriceString),
-                Volume = response.Volume.KeepNumbersOnly()?.ToUInt(),
-                AppId = appId,
-                HashName = hashName
-            };
+            return new ItemMarketPrice(
+                appId,
+                hashName,
+                ParseHelper.ParsePrice(response.LowestPriceString),
+                ParseHelper.ParsePrice(response.MedianPriceString),
+                response.Volume.KeepNumbersOnly()?.ToUInt());
         }
 
         public static InventoryItem ToModel(this InventoryAssetResponseModel asset, InventoryDescriptionResponseModel description)
@@ -29,64 +27,57 @@ namespace SteamConsoleHelper.Helpers
             var tagName = description.Tags?.Find(x => x.Category == "item_class")?.LocalizedTagName;
             var type = ItemTypeIdentifier.ParseTypeFromDescription(tagName, description.MarketName);
 
-            return new InventoryItem
-            {
-                AssetId = asset.AssetId,
-                AppId = asset.AppId,
-                ClassId = asset.ClassId,
-                ContextId = asset.ContextId,
-                Amount = asset.Amount,
-                MarketName = description.MarketName,
-                InstanceId = asset.InstanceId,
-                Commodity = description.Commodity,
-                Marketable = description.Marketable,
-                Tradable = description.Tradable,
-                Name = description.Name,
-                MarketHashName = description.MarketHashName,
-                Type = description.Type,
-                ItemType = type,
-                IconUrl = "https://community.cloudflare.steamstatic.com/economy/image/" + description.IconUrl,
-                Tags = description.Tags.Select(x => x.ToModel()).ToList()
-            };
+            return new InventoryItem(
+                description.Name,
+                description.MarketName,
+                description.MarketHashName,
+                asset.AppId,
+                asset.ContextId,
+                asset.AssetId,
+                asset.ClassId,
+                asset.InstanceId,
+                asset.Amount,
+                description.Type,
+                description.IconUrl,
+                description.Tradable,
+                description.Marketable,
+                description.Commodity,
+                type,
+                description.Tags!.Select(x => x.ToModel()).ToList()
+            );
         }
 
         public static MarketListing ToModel(this ListingAsset asset, ListingHover listingHover, ListingDescription listingDescription)
         {
-            return new MarketListing
-            {
-                ListingId = listingHover.ListingId,
-                AssetId = asset.AssetId,
-                AppId = asset.AppId,
-                ClassId = asset.ClassId,
-                ContextId = asset.ContextId,
-                SellerPrice = listingDescription.SellerPrice,
-                BuyerPrice = listingDescription.BuyerPrice,
-                SellDate = listingDescription.MarketSellDate,
-                HashName = listingDescription.HashName,
-                AwaitingConfirmation = listingDescription.AwaitingConfirmation
-            };
+            return new MarketListing(
+                listingHover.ListingId,
+                asset.AssetId,
+                listingDescription.SellerPrice,
+                listingDescription.BuyerPrice,
+                listingDescription.MarketSellDate,
+                listingDescription.HashName,
+                asset.AppId,
+                asset.ContextId,
+                asset.ClassId,
+                listingDescription.AwaitingConfirmation);
         }
 
         private static ItemTag ToModel(this ItemTagResponseModel response)
         {
-            return new ItemTag
-            {
-                Name = response.InternalName,
-                LocalizedTagName = response.LocalizedTagName,
-                Category = response.Category,
-                LocalizedCategoryName = response.LocalizedCategoryName
-            };
+            return new ItemTag(
+                response.InternalName,
+                response.Category,
+                response.LocalizedCategoryName,
+                response.LocalizedTagName);
         }
 
         public static BoosterCard ToModel(this BoosterCardResponseModel response)
         {
-            return new BoosterCard
-            {
-                Name = response.Name,
-                ImageUrl = response.ImageUrl,
-                IsFoil = response.IsFoil,
-                Series = response.Series
-            };
+            return new BoosterCard(
+                response.Name,
+                response.IsFoil,
+                response.ImageUrl,
+                response.Series);
         }
     }
 }

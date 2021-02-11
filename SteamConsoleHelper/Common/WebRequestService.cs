@@ -19,7 +19,7 @@ namespace SteamConsoleHelper.Common
     // ReSharper disable PossibleNullReferenceException
     public class WebRequestService
     {
-        private static bool EnableUrlLogs = false;
+        private static readonly bool EnableUrlLogs = false;
 
         private readonly ILogger<WebRequestService> _logger;
         private readonly HttpClientFactory _httpClientFactory;

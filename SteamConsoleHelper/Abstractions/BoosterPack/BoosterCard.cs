@@ -1,13 +1,21 @@
 ﻿namespace SteamConsoleHelper.Abstractions.BoosterPack
 {
-    public class BoosterCard
+    public readonly struct BoosterCard
     {
-        public string Name { get; set; }
+        public string Name { get; }
         
-        public bool IsFoil { get; set; }
+        public bool IsFoil { get; }
         
-        public string ImageUrl { get; set; }
+        public string ImageUrl { get; }
         
-        public uint Series { get; set; }
+        public uint Series { get; }
+
+        public BoosterCard(string name, bool isFoil, string imageUrl, uint series)
+        {
+            Name = name;
+            IsFoil = isFoil;
+            ImageUrl = imageUrl;
+            Series = series;
+        }
     }
 }

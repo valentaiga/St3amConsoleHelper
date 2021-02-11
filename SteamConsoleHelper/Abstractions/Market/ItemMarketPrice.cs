@@ -1,15 +1,24 @@
 ﻿namespace SteamConsoleHelper.Abstractions.Market
 {
-    public class ItemMarketPrice
+    public readonly struct ItemMarketPrice
     {
-        public uint AppId { get; set; }
+        public uint AppId { get;}
 
-        public string HashName { get; set; }
+        public string HashName { get; }
 
-        public uint? LowestPrice { get; set; }
+        public uint? LowestPrice { get; }
 
-        public uint? MedianPrice { get; set; }
+        public uint? MedianPrice { get; }
 
-        public uint? Volume { get; set; }
+        public uint? Volume { get; }
+
+        public ItemMarketPrice(uint appId, string hashName, uint? lowestPrice, uint? medianPrice, uint? volume)
+        {
+            AppId = appId;
+            HashName = hashName;
+            LowestPrice = lowestPrice;
+            MedianPrice = medianPrice;
+            Volume = volume;
+        }
     }
 }

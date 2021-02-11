@@ -1,13 +1,21 @@
 ﻿namespace SteamConsoleHelper.Abstractions.Inventory
 {
-    public class ItemTag
+    public readonly struct ItemTag
     {
-        public string Name { get; set; }
+        public string Name { get; }
         
-        public string Category { get; set; }
+        public string Category { get; }
         
-        public string LocalizedCategoryName { get; set; }
+        public string LocalizedCategoryName { get; }
         
-        public string LocalizedTagName { get; set; }
+        public string LocalizedTagName { get; }
+
+        public ItemTag(string name, string category, string localizedCategoryName, string localizedTagName)
+        {
+            Name = name;
+            Category = category;
+            LocalizedCategoryName = localizedCategoryName;
+            LocalizedTagName = localizedTagName;
+        }
     }
 }

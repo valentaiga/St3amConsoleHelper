@@ -22,20 +22,17 @@ namespace SteamConsoleHelper.Services
         private readonly WebRequestService _requestService;
         private readonly SteamUrlService _steamUrlService;
         private readonly ProfileSettings _profileSettings;
-        private readonly LocalCacheService _localCacheService;
 
         public MarketService(
             ILogger<MarketService> logger,
             WebRequestService requestService, 
             SteamUrlService steamUrlService, 
-            ProfileSettings profileSettings, 
-            LocalCacheService localCacheService)
+            ProfileSettings profileSettings)
         {
             _logger = logger;
             _requestService = requestService;
             _steamUrlService = steamUrlService;
             _profileSettings = profileSettings;
-            _localCacheService = localCacheService;
         }
 
         public async Task<ItemMarketPrice> GetItemPriceAsync(InventoryItem item)

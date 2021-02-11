@@ -1,13 +1,21 @@
 ﻿namespace SteamConsoleHelper.Abstractions.Market
 {
-    public class ListingHover
+    public readonly struct ListingHover
     {
-        public ulong ListingId { get; set; }
+        public ulong ListingId { get; }
 
-        public uint AppId { get; set; }
+        public uint AppId { get; }
 
-        public uint ContextId { get; set; }
+        public uint ContextId { get; }
 
-        public ulong AssetId { get; set; }
+        public ulong AssetId { get; }
+
+        public ListingHover(ulong listingId, uint appId, uint contextId, ulong assetId)
+        {
+            ListingId = listingId;
+            AppId = appId;
+            ContextId = contextId;
+            AssetId = assetId;
+        }
     }
 }

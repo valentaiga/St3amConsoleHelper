@@ -35,7 +35,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             _gemsService = gemsService;
             _delayedExecutionPool = delayedExecutionPool;
 
-            JobExecuteDelay = TimeSpan.FromHours(1);
+            JobExecuteDelay = TimeSpan.FromMinutes(10);
         }
 
         public override async Task DoWorkAsync(CancellationToken cancellationToken)

@@ -38,13 +38,11 @@ namespace SteamConsoleHelper.Helpers
                 var contextId = parameters[2].KeepNumbersOnly().ToUInt();
                 var assetId = parameters[3].KeepNumbersOnly().ToULong();
 
-                return new ListingHover
-                {
-                    ListingId = listingId,
-                    AppId = appId,
-                    ContextId = contextId,
-                    AssetId = assetId
-                };
+                return new ListingHover(
+                    listingId,
+                    appId,
+                    contextId,
+                    assetId);
             }).ToList();
         }
 
@@ -64,12 +62,12 @@ namespace SteamConsoleHelper.Helpers
                     return ListingDescription.Empty;
                 }
 
-                var buyerPrice = ParsePrice(parameters[0]).Value;
-                var sellerPrice = ParsePrice(parameters[1]).Value;
+                var buyerPrice = ParsePrice(parameters[0])!.Value;
+                var sellerPrice = ParsePrice(parameters[1])!.Value;
                 var sellDateRegexValue = ListingDateRegex.Match(parameters[2]).Value;
-                var sellDate = sellDateRegexValue.Substring(2, sellDateRegexValue.IndexOf("<") - 2).ToDateTime();
+                var sellDate = sellDateRegexValue.Substring(2, sellDateRegexValue.IndexOf("<", StringComparison.Ordinal) - 2).ToDateTime();
                 var listingId = parameters[3].KeepNumbersOnly().ToULong();
-                var hashName = HttpUtility.UrlDecode(parameters[5].Substring(parameters[5].LastIndexOf("/") + 1));
+                var hashName = HttpUtility.UrlDecode(parameters[5].Substring(parameters[5].LastIndexOf("/", StringComparison.Ordinal) + 1));
 
                 if (DateTime.Today.Month == 1 && sellDate.Month == 12)
                 {
