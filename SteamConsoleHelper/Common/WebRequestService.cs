@@ -16,7 +16,6 @@ using SteamConsoleHelper.Resources;
 namespace SteamConsoleHelper.Common
 {
     // ReSharper disable PossibleMultipleEnumeration
-    // ReSharper disable PossibleNullReferenceException
     public class WebRequestService
     {
         private static readonly bool EnableUrlLogs = false;
@@ -183,6 +182,7 @@ namespace SteamConsoleHelper.Common
                 case HttpStatusCode.NotFound:
                     throw new InternalException(InternalError.RequestNotFound);
                 default:
+                    _logger.LogError($"Unexpected error response: {response.StatusCode}:{response.ReasonPhrase}");
                     throw new InternalException(InternalError.UnexpectedError);
             }
         }

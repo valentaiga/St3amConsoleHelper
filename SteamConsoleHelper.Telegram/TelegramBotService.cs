@@ -45,10 +45,8 @@ namespace SteamConsoleHelper.Telegram
             await _telegramBotClient.SendTextMessageAsync(_authorChatId, text);
         }
 
-        public async Task<string> SendMessageAndReadAnswerAsync(string text)
+        public async Task<string> ReadMessageAsync()
         {
-            await _telegramBotClient.SendTextMessageAsync(_authorChatId, text);
-            
             _telegramBotClient.StartReceiving();
             _logger.LogInformation($"Awaiting user's answer...");
 
@@ -62,6 +60,12 @@ namespace SteamConsoleHelper.Telegram
             _lastMessage = null;
 
             return result;
+        }
+
+        public async Task<string> SendMessageAndReadAnswerAsync(string text)
+        {
+            await SendMessageAsync(text);
+            return await ReadMessageAsync();
         }
 
         private async void OnMessageHandler(object sender, MessageEventArgs args)
@@ -78,14 +82,14 @@ namespace SteamConsoleHelper.Telegram
                 return;
             }
 
-            _lastMessage = message.Text;
             try
             {
                 await _telegramBotClient.DeleteMessageAsync(message.Chat.Id, message.MessageId);
+                _lastMessage = message.Text;
             }
-            catch (Exception e)
+            catch
             {
-                _logger.LogError(e.Message);
+                // sometimes message sent earlier and already deleted
             }
         }
     }

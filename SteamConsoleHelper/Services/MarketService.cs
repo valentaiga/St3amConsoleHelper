@@ -69,7 +69,7 @@ namespace SteamConsoleHelper.Services
             _logger.LogInformation($"Sent to market item '{item.MarketHashName}' assetId: '{item.AssetId}' with price '{price}'");
         }
 
-        public async Task RemoveItemFromListing(ulong listingId)
+        public async Task RemoveItemFromListingAsync(ulong listingId)
         {
             var url = _steamUrlService.RemoveListingUrl(listingId);
             var data = new RemoveListingPostModel(_profileSettings.SessionId);
@@ -78,7 +78,7 @@ namespace SteamConsoleHelper.Services
             _logger.LogInformation($"Removed listing from market assetId '{listingId}'");
         }
 
-        public async Task<List<MarketListing>> GetAllMyListings()
+        public async Task<List<MarketListing>> GetAllMyListingsAsync()
         {
             uint offset = 0;
             var url = _steamUrlService.GetMyListingsUrl(offset);

@@ -12,7 +12,7 @@ using SteamConsoleHelper.Services;
 namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 {
     /// <summary>
-    /// Job for removing more expensive items from market
+    /// Job for removing expired items from market
     /// </summary>
     public class CheckMarketPriceJob : ScheduledJobBase<CheckMarketPriceJob>
     {
@@ -48,14 +48,14 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                 _logger.LogDebug($"listingId: '{notSoldItem.ListingId}' hashName: '{notSoldItem.HashName}' buyerPrice: '{notSoldItem.BuyerPrice}' lowestMarketPrice: '{lowestMarketPrice}'");
                 if (notSoldItem.BuyerPrice > lowestMarketPrice)
                 {
-                    await _marketService.RemoveItemFromListing(notSoldItem.ListingId);
+                    await _marketService.RemoveItemFromListingAsync(notSoldItem.ListingId);
                 }
             }));
         }
 
         private async Task<List<MarketListing>> GetNotSoldItemsAsync()
         {
-            var marketListings = await _marketService.GetAllMyListings();
+            var marketListings = await _marketService.GetAllMyListingsAsync();
 
             // filter items older than 3 days OR price is too hugh and it needed to be change now 
             var maximumDateForCheck = DateTime.UtcNow.AddDays(-DaysCountBeforeListingExpire);

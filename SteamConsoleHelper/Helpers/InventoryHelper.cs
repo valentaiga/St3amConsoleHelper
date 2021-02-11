@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using SteamConsoleHelper.Abstractions.Cache;
 using SteamConsoleHelper.Abstractions.Enums;
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.Abstractions.Market;
@@ -19,6 +18,10 @@ namespace SteamConsoleHelper.Helpers
 
         public static List<InventoryItem> FilterByType(this List<InventoryItem> inventoryItems, ItemType itemType)
             => inventoryItems.FindAll(x => x.ItemType == itemType);
+
+        public static List<InventoryItem> FilterSentToMarketItems(this List<InventoryItem> inventoryItems, List<MarketListing> marketListings)
+            => inventoryItems.FindAll(
+                x => !marketListings.Exists(y => x.AssetId == y.AssetId && x.ClassId == y.ClassId && x.MarketHashName == y.HashName));
 
         public static List<(InventoryAssetResponseModel asset, InventoryDescriptionResponseModel description)> MapAssets(
             List<InventoryAssetResponseModel> assets,

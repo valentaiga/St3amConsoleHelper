@@ -60,8 +60,6 @@ namespace SteamConsoleHelper.Resources
 
             ProfileUrl = response.RequestMessage.RequestUri.ToString();
             UrlNickname = ProfileUrl.Split('/', StringSplitOptions.RemoveEmptyEntries).Last();
-
-            Log.Information($"Profile initialized: ProfileUrl: '{ProfileUrl}', UrlNickname: '{UrlNickname}'");
         }
 
         public static void SetIsAuthenticatedStatus(bool isAuthenticated)

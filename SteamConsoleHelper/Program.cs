@@ -82,8 +82,6 @@ namespace SteamConsoleHelper
 
                     services
                         .AddSingleton<HttpClientFactory>()
-                        .AddSingleton<StoreService>()
-                        .AddSingleton<LocalCacheService>()
                         .AddTransient<SteamUrlService>()
                         .AddTransient<WebRequestService>()
 
@@ -100,7 +98,6 @@ namespace SteamConsoleHelper
                         .AddHostedService<HealthCheckService>()
                         // jobs
                         .AddHostedService<CheckMarketPriceJob>()
-                        .AddHostedService<UnpackBoosterPacksJob>()
                         .AddHostedService<InventoryItemsProcessJob>();
                 });
 
