@@ -59,7 +59,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             // filter items older than 3 days OR price is too hugh and it needed to be change now 
             var maximumDateForCheck = DateTime.UtcNow.AddDays(-DaysCountBeforeListingExpire);
             var result = marketListings
-                .FindAll(x => x.SellDate < maximumDateForCheck || x.SellerPrice > PriceHelper.ExpensivePrice);
+                .FindAll(x => x.SellDate < maximumDateForCheck || x.SellerPrice > PriceHelper.ExpensivePriceValue);
             _logger.LogDebug($"Total '{result.Count}' items on market older than {DaysCountBeforeListingExpire} days or price > 100 rubles");
             
             return result;

@@ -4,7 +4,7 @@ namespace SteamConsoleHelper.Helpers
 {
     public static class PriceHelper
     {
-        public const uint ExpensivePrice = 100_00;
+        public const uint ExpensivePriceValue = 100_00;
 
         private const uint DefaultNoPriceValue = 2000;
         private const uint CheaperByValue = 3; // 0,03 rubles
@@ -17,12 +17,14 @@ namespace SteamConsoleHelper.Helpers
             var sellerPrice = (uint)Math.Ceiling((double)cost * 100 / 115);
             if (lowerPriceByDefault)
             {
-                sellerPrice = sellerPrice > ExpensivePrice
+                sellerPrice = sellerPrice > ExpensivePriceValue
                     ? sellerPrice - CheaperByBigValue
                     : sellerPrice - CheaperByValue;
             }
 
             return sellerPrice;
         }
+
+        public static double ConvertToRubles(uint price) => (double)price / 100;
     }
 }

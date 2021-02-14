@@ -17,6 +17,8 @@ namespace SteamConsoleHelper.Common
         private const string RemoveListingBaseUrl = "https://steamcommunity.com/market/removelisting/{0}";
         private const string GetNotificationsCountBaseUrl = "https://steamcommunity.com/actions/GetNotificationCounts";
         private const string GetMarketItemListingBaseUrl = "https://steamcommunity.com/market/listings/{0}/{1}";
+        private const string CreateBuyOrderBaseUrl = "https://steamcommunity.com/market/createbuyorder/";
+        private const string CancelBuyOrderBaseUrl = "https://steamcommunity.com/market/cancelbuyorder/";
 
         public string GetGemsForItemUrl(uint appId, uint itemType) => string.Format(GetGemsForItemBaseUrl, appId, itemType);
 
@@ -41,5 +43,9 @@ namespace SteamConsoleHelper.Common
         public string GetNotificationsCountUrl() => GetNotificationsCountBaseUrl;
 
         public string GetMarketItemListingUrl(uint appId, string marketHashName) => string.Format(GetMarketItemListingBaseUrl, appId, marketHashName);
+
+        public string CreateBuyOrderUrl() => CreateBuyOrderBaseUrl;
+
+        public string CancelBuyOrderUrl() => CancelBuyOrderBaseUrl;
     }
 }

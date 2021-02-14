@@ -18,8 +18,6 @@ namespace SteamConsoleHelper.Common
     // ReSharper disable PossibleMultipleEnumeration
     public class WebRequestService
     {
-        private static readonly bool EnableUrlLogs = false;
-
         private readonly ILogger<WebRequestService> _logger;
         private readonly HttpClientFactory _httpClientFactory;
 
@@ -52,10 +50,6 @@ namespace SteamConsoleHelper.Common
 
             using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.GetAsync(getUrl);
-            if (EnableUrlLogs)
-            {
-                _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request: '{getUrl}'");
-            }
             ValidateResponse(response);
         }
 
@@ -77,11 +71,7 @@ namespace SteamConsoleHelper.Common
             
             using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.GetAsync(getUrl);
-
-            if (EnableUrlLogs)
-            {
-                _logger.LogDebug($"GET statusCode: '{(int)response.StatusCode}' request '{getUrl}'");
-            }
+            
             return await DeserializeResponseAsync<T>(response);
         }
 
@@ -98,11 +88,6 @@ namespace SteamConsoleHelper.Common
             
             using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
-
-            if (EnableUrlLogs)
-            {
-                _logger.LogDebug($"POST statusCode: '{(int)response.StatusCode}' request '{url}'");
-            }
 
             return await DeserializeResponseAsync<T>(response);
 
@@ -127,12 +112,7 @@ namespace SteamConsoleHelper.Common
             
             using var httpClient = _httpClientFactory.Create();
             var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
-
-            if (EnableUrlLogs)
-            {
-                _logger.LogDebug($"POST statusCode: '{(int)response.StatusCode}' request '{url}'");
-            }
-
+            
             ValidateResponse(response);
 
             IEnumerable<KeyValuePair<string, string>> GetFormContent()

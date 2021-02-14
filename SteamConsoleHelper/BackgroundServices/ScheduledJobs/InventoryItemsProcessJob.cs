@@ -86,7 +86,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                         return;
                     }
 
-                    var calculatedPrice = price.LowestPrice > PriceHelper.ExpensivePrice && price.LowestPrice < price.MedianPrice
+                    var calculatedPrice = price.LowestPrice > PriceHelper.ExpensivePriceValue && price.LowestPrice < price.MedianPrice
                         ? PriceHelper.CalculateSellerPrice(price.LowestPrice, true)
                         : price.MedianPrice > price.LowestPrice
                             ? PriceHelper.CalculateSellerPrice(price.MedianPrice, true)
@@ -95,14 +95,12 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                     if (card.IsCardFoil())
                     {
                         var cardUrl = _steamUrlService.GetMarketItemListingUrl(CardsAppId, card.MarketHashName);
-                        await _telegramBotService.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{ToDouble(calculatedPrice)}' {Environment.NewLine}{cardUrl}");
+                        await _telegramBotService.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{PriceHelper.ConvertToRubles(calculatedPrice)}' {Environment.NewLine}{cardUrl}");
                         _logger.LogInformation($"Sending foil '{card.MarketHashName}'. My price '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
                     }
 
                     await _marketService.SellItemAsync(card, calculatedPrice);
                 }));
-
-            static double ToDouble(uint price) => (double) price / 100;
         }
 
         private void OpenSacksOfGems(List<InventoryItem> inventoryItems)

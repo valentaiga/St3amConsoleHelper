@@ -110,5 +110,23 @@ namespace SteamConsoleHelper.Services
 
             return result;
         }
+
+        public async Task CreateItemBuyOrderAsync(uint appId, string marketHashName, uint price, uint quantity)
+        {
+            var url = _steamUrlService.CreateBuyOrderUrl();
+            var data = new CreateBuyOrderPostModel(Settings.SessionId, appId, marketHashName, price, quantity);
+
+            await _requestService.PostRequestAsync<SteamResponseBase>(url, data);
+            _logger.LogInformation($"Buy order for '{marketHashName}' created with price {price}");
+        }
+
+        public async Task CancelItemBuyOrderAsync(ulong orderId)
+        {
+            var url = _steamUrlService.CancelBuyOrderUrl();
+            var data = new CancelBuyOrderPostModel(Settings.SessionId, orderId);
+
+            await _requestService.PostRequestAsync(url, data);
+            _logger.LogInformation($"Buy order with id '{orderId}' canceled");
+        }
     }
 }
