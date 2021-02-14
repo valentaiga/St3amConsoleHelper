@@ -21,18 +21,15 @@ namespace SteamConsoleHelper.Services
         private readonly ILogger<MarketService> _logger;
         private readonly WebRequestService _requestService;
         private readonly SteamUrlService _steamUrlService;
-        private readonly ProfileSettings _profileSettings;
 
         public MarketService(
             ILogger<MarketService> logger,
             WebRequestService requestService, 
-            SteamUrlService steamUrlService, 
-            ProfileSettings profileSettings)
+            SteamUrlService steamUrlService)
         {
             _logger = logger;
             _requestService = requestService;
             _steamUrlService = steamUrlService;
-            _profileSettings = profileSettings;
         }
 
         public async Task<ItemMarketPrice> GetItemPriceAsync(InventoryItem item)
@@ -59,7 +56,7 @@ namespace SteamConsoleHelper.Services
         {
             var url = _steamUrlService.SellItemUrl();
             var data = new SellItemPostModel(
-                _profileSettings.SessionId,
+                Settings.SessionId,
                 item.AppId,
                 item.AssetId,
                 item.ContextId,
@@ -72,7 +69,7 @@ namespace SteamConsoleHelper.Services
         public async Task RemoveItemFromListingAsync(ulong listingId)
         {
             var url = _steamUrlService.RemoveListingUrl(listingId);
-            var data = new RemoveListingPostModel(_profileSettings.SessionId);
+            var data = new RemoveListingPostModel(Settings.SessionId);
 
             await _requestService.PostRequestAsync(url, data);
             _logger.LogInformation($"Removed listing from market assetId '{listingId}'");

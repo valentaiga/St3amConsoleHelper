@@ -37,7 +37,7 @@ namespace SteamConsoleHelper.Common
 
         public async ValueTask GetRequestAsync(string url, IEnumerable<(string name, string value)> parameters = null)
         {
-            if (!ProfileSettings.IsAuthenticated)
+            if (!Settings.IsAuthenticated)
             {
                 _logger.LogWarning("Request is failed, authentication tokens are invalid");
                 throw new InternalException(InternalError.UserIsNotAuthenticated);
@@ -62,7 +62,7 @@ namespace SteamConsoleHelper.Common
         public async ValueTask<T> GetRequestAsync<T>(string url, IEnumerable<(string name, string value)> parameters = null)
             where T : SteamResponseBase
         {
-            if (!ProfileSettings.IsAuthenticated)
+            if (!Settings.IsAuthenticated)
             {
                 _logger.LogWarning("Request is failed, authentication tokens are invalid");
                 throw new InternalException(InternalError.UserIsNotAuthenticated);
@@ -88,7 +88,7 @@ namespace SteamConsoleHelper.Common
         public async ValueTask<T> PostRequestAsync<T>(string url, object data)
             where T : SteamResponseBase
         {
-            if (!ProfileSettings.IsAuthenticated)
+            if (!Settings.IsAuthenticated)
             {
                 _logger.LogWarning("Request is failed, authentication tokens are invalid");
                 throw new InternalException(InternalError.UserIsNotAuthenticated);
@@ -117,7 +117,7 @@ namespace SteamConsoleHelper.Common
 
         public async ValueTask PostRequestAsync(string url, object data)
         {
-            if (!ProfileSettings.IsAuthenticated)
+            if (!Settings.IsAuthenticated)
             {
                 _logger.LogWarning("Request is failed, authentication tokens are invalid");
                 throw new InternalException(InternalError.UserIsNotAuthenticated);

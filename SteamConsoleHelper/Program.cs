@@ -59,7 +59,6 @@ namespace SteamConsoleHelper
                 .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    // todo: use web to login via steam
                     webBuilder.UseStartup<Startup>();
                     webBuilder.UseKestrel(options =>
                         options.ListenAnyIP(int.Parse(Environment.GetEnvironmentVariable("PORT") ??
@@ -67,8 +66,7 @@ namespace SteamConsoleHelper
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton<ProfileSettings>()
-                        .AddSingleton<TelegramBotService>();
+                    services.AddSingleton<TelegramBotService>();
                     if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
                     {
                         services.AddSingleton<ISteamAuthenticationService, FakeSteamAuthenticationService>();
@@ -107,9 +105,8 @@ namespace SteamConsoleHelper
 
             provider.GetRequiredService<ISteamAuthenticationService>()
                 .InitiateLoginAsync().GetAwaiter().GetResult();
-
-            provider.GetRequiredService<ProfileSettings>()
-                .InitializeAsync().GetAwaiter().GetResult();
+                                                           
+            Settings.InitializeAsync().GetAwaiter().GetResult();
         }
     }
 }

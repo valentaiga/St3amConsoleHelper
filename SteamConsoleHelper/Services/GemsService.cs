@@ -16,18 +16,15 @@ namespace SteamConsoleHelper.Services
         private readonly ILogger<GemsService> _logger;
         private readonly SteamUrlService _steamUrlService;
         private readonly WebRequestService _webRequestService;
-        private readonly ProfileSettings _profileSettings;
 
         public GemsService(
             ILogger<GemsService> logger,
             SteamUrlService steamUrlService, 
-            WebRequestService webRequestService, 
-            ProfileSettings profileSettings)
+            WebRequestService webRequestService)
         {
             _logger = logger;
             _steamUrlService = steamUrlService;
             _webRequestService = webRequestService;
-            _profileSettings = profileSettings;
         }
 
         public async Task GrindSackIntoGems(InventoryItem item)
@@ -39,7 +36,7 @@ namespace SteamConsoleHelper.Services
 
             var url = _steamUrlService.GrindSackToGemsUrl();
             var data = new GrindSackIntoGemsPostModel(
-                _profileSettings.SessionId,
+                Settings.SessionId,
                 item.AppId,
                 item.AssetId,
                 item.Amount);
@@ -52,7 +49,7 @@ namespace SteamConsoleHelper.Services
         {
             var url = _steamUrlService.GrindItemIntoGemsUrl();
             var data = new GrindItemIntoGemsPostModel(
-                _profileSettings.SessionId,
+                Settings.SessionId,
                 item.AppId,
                 item.AssetId,
                 item.ContextId);

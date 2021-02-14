@@ -2,18 +2,18 @@
   Steam Console Helper
 </h1>
 <p align="center">
-  Steam cards automatic recycle implementation.
+  Steam cards automatic sell implementation.
 </p>
 <p align="center">.Net Core 3.1 REQUIRED</p>
 <br>
 
 ## Detailed setup instructions
-- Download & Install [.NET Core 3.1](https://dotnet.microsoft.com/download).
-- [FUTURE]: Type your login and password credentials into "appsettings.json".
+ - Download & Install [.NET Core 3.1](https://dotnet.microsoft.com/download)
+ - Create telegram bot and change telegram credentials in "appsettings.json" (used for steam authentication)
+ - Run app
 
-
-## Start a background service
- - First you need to publish a project with "Release" into your hidden folder.
- - **Windows: open your "Powershell", than type "sc.exe create SteamConsoleHelper binpath= <yourpath> start= auto"**
- - **Linux:** I dont know, find it by yourself.
+## Start a background service [FUTURE]
+ - First you need to publish a project with "Release" into your hidden folder
+ - **Windows:** open your "Powershell", than type "sc.exe create SteamConsoleHelper binpath=<yourpath> start= auto"
+ - **Linux:** I havent work with linux, find it by yourself
 

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using SteamConsoleHelper.Abstractions.Enums;
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.Abstractions.Market;
+using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Helpers;
 using SteamConsoleHelper.Services;
 using SteamConsoleHelper.Telegram;
@@ -19,7 +20,10 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
     /// </summary>
     public class InventoryItemsProcessJob : ScheduledJobBase<InventoryItemsProcessJob>
     {
+        private const uint CardsAppId = 730;
+
         private readonly ILogger<InventoryItemsProcessJob> _logger;
+        private readonly SteamUrlService _steamUrlService;
         private readonly InventoryService _inventoryService;
         private readonly MarketService _marketService;
         private readonly BoosterPackService _boosterPackService;
@@ -29,6 +33,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
         public InventoryItemsProcessJob(
             ILogger<InventoryItemsProcessJob> logger,
+            SteamUrlService steamUrlService,
             InventoryService inventoryService,
             MarketService marketService,
             BoosterPackService boosterPackService,
@@ -39,6 +44,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             : base(logger, jobManager)
         {
             _logger = logger;
+            _steamUrlService = steamUrlService;
             _inventoryService = inventoryService;
             _marketService = marketService;
             _boosterPackService = boosterPackService;
@@ -88,12 +94,15 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
                     if (card.IsCardFoil())
                     {
-                        await _telegramBotService.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{calculatedPrice:##,00}' {Environment.NewLine}{card.IconUrl}");
-                        _logger.LogInformation($"Sending foil '{card.MarketHashName}'. Cost '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
+                        var cardUrl = _steamUrlService.GetMarketItemListingUrl(CardsAppId, card.MarketHashName);
+                        await _telegramBotService.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{ToDouble(calculatedPrice)}' {Environment.NewLine}{cardUrl}");
+                        _logger.LogInformation($"Sending foil '{card.MarketHashName}'. My price '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
                     }
 
                     await _marketService.SellItemAsync(card, calculatedPrice);
                 }));
+
+            static double ToDouble(uint price) => (double) price / 100;
         }
 
         private void OpenSacksOfGems(List<InventoryItem> inventoryItems)

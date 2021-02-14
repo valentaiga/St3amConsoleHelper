@@ -16,23 +16,17 @@ namespace SteamConsoleHelper.Common
         private const string GetMarketListingsBaseUrl = "https://steamcommunity.com/market/mylistings?count=100&start={0}&l=english";
         private const string RemoveListingBaseUrl = "https://steamcommunity.com/market/removelisting/{0}";
         private const string GetNotificationsCountBaseUrl = "https://steamcommunity.com/actions/GetNotificationCounts";
-
-        private readonly ProfileSettings _profileSettings;
-
-        public SteamUrlService(ProfileSettings profileSettings)
-        {
-            _profileSettings = profileSettings;
-        }
+        private const string GetMarketItemListingBaseUrl = "https://steamcommunity.com/market/listings/{0}/{1}";
 
         public string GetGemsForItemUrl(uint appId, uint itemType) => string.Format(GetGemsForItemBaseUrl, appId, itemType);
 
-        public string GrindSackToGemsUrl() => string.Format(GrindSackToGemsBaseUrl, ProfileSettings.UrlNickname);
+        public string GrindSackToGemsUrl() => string.Format(GrindSackToGemsBaseUrl, Settings.UrlNickname);
 
-        public string UnpackBoosterUrl() => string.Format(UnpackBoosterBaseUrl, ProfileSettings.UrlNickname);
+        public string UnpackBoosterUrl() => string.Format(UnpackBoosterBaseUrl, Settings.UrlNickname);
 
         public string CreateBoosterUrl() => CreateBoosterBaseUrl;
 
-        public string GrindItemIntoGemsUrl() => string.Format(GrindItemIntoGemsBaseUrl, ProfileSettings.UrlNickname);
+        public string GrindItemIntoGemsUrl() => string.Format(GrindItemIntoGemsBaseUrl, Settings.UrlNickname);
 
         public string GetItemPriceUrl(uint appId, string hashName) => string.Format(GetItemPriceBaseUrl, appId, hashName);
 
@@ -42,8 +36,10 @@ namespace SteamConsoleHelper.Common
 
         public string RemoveListingUrl(ulong listingId) => string.Format(RemoveListingBaseUrl, listingId);
 
-        public string GetCurrentInventoryUrl() => string.Format(GetInventoryBaseUrl, _profileSettings.SteamId);
+        public string GetCurrentInventoryUrl() => string.Format(GetInventoryBaseUrl, Settings.SteamId);
 
         public string GetNotificationsCountUrl() => GetNotificationsCountBaseUrl;
+
+        public string GetMarketItemListingUrl(uint appId, string marketHashName) => string.Format(GetMarketItemListingBaseUrl, appId, marketHashName);
     }
 }

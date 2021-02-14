@@ -39,8 +39,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
         public override async Task DoWorkAsync(CancellationToken cancellationToken)
         {
             var notSoldItems = await GetNotSoldItemsAsync();
-
-            // todo: move some constants to GlobalSettings.cs (like timespan with default delay)
+            
             Parallel.ForEach(notSoldItems, (notSoldItem) => _delayedExecutionPool.EnqueueTaskToPool(async () =>
             {
                 var lowestMarketPrice = await GetLowestMarketPriceAsync(notSoldItem.AppId, notSoldItem.HashName);

@@ -16,13 +16,11 @@ namespace SteamConsoleHelper.Services
     {
         private readonly SteamUrlService _steamUrlService;
         private readonly WebRequestService _webRequestService;
-        private readonly ProfileSettings _profileSettings;
 
-        public BoosterPackService(SteamUrlService steamUrlService, WebRequestService webRequestService, ProfileSettings profileSettings)
+        public BoosterPackService(SteamUrlService steamUrlService, WebRequestService webRequestService)
         {
             _steamUrlService = steamUrlService;
             _webRequestService = webRequestService;
-            _profileSettings = profileSettings;
         }
 
         public async Task<List<BoosterCard>> UnpackBoosterAsync(uint appId, ulong assetId)
@@ -30,7 +28,7 @@ namespace SteamConsoleHelper.Services
             var url = _steamUrlService.UnpackBoosterUrl();
 
             var data = new UnpackBoosterPostModel(
-                _profileSettings.SessionId,
+                Settings.SessionId,
                 appId,
                 assetId);
 
@@ -43,7 +41,7 @@ namespace SteamConsoleHelper.Services
             var url = _steamUrlService.CreateBoosterUrl();
 
             var data = new CreateBoosterPostModel(
-                _profileSettings.SessionId,
+                Settings.SessionId,
                 appId);
 
             await _webRequestService.PostRequestAsync<SteamResponseBase>(url, data);

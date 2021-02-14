@@ -1,33 +1,24 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-using Microsoft.Extensions.Logging;
+
 using SteamConsoleHelper.Resources;
 
 namespace SteamConsoleHelper.Common
 {
     public class HttpClientFactory
     {
-        private readonly ILogger<HttpClientFactory> _logger;
-        private readonly ProfileSettings _profileSettings;
-
-        public HttpClientFactory(ILogger<HttpClientFactory> logger, ProfileSettings profileSettings)
-        {
-            _logger = logger;
-            _profileSettings = profileSettings;
-        }
-
         public HttpClient Create()
         {
-            var inventoryUrl = ProfileSettings.ProfileUrl + "inventory";
+            var inventoryUrl = Settings.ProfileUrl + "inventory";
             var handler = new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
                 CookieContainer = new CookieContainer()
             };
 
-            handler.CookieContainer.Add(new Cookie("sessionid", _profileSettings.SessionId, "/", "steamcommunity.com"));
-            handler.CookieContainer.Add(new Cookie("steamLoginSecure", _profileSettings.SteamLoginSecure, "/", "steamcommunity.com"));
+            handler.CookieContainer.Add(new Cookie("sessionid", Settings.SessionId, "/", "steamcommunity.com"));
+            handler.CookieContainer.Add(new Cookie("steamLoginSecure", Settings.SteamLoginSecure, "/", "steamcommunity.com"));
 
             var client = new HttpClient(handler);
 

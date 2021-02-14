@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{101D7C07-2AAE-445B-AA92-EA0F799CB55C}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		README.md = README.md
 		lib\SteamAuth.dll = lib\SteamAuth.dll
 	EndProjectSection
 EndProject

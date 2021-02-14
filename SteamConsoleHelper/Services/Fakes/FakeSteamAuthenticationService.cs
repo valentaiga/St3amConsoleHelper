@@ -14,13 +14,10 @@ namespace SteamConsoleHelper.Services.Fakes
 {
     public class FakeSteamAuthenticationService : ISteamAuthenticationService
     {
-        private readonly ProfileSettings _profileSettings;
         private readonly UserLogin _fakeUserLogin;
 
-        public FakeSteamAuthenticationService(ProfileSettings profileSettings, IConfiguration configuration)
+        public FakeSteamAuthenticationService(IConfiguration configuration)
         {
-            _profileSettings = profileSettings;
-
             _fakeUserLogin = new UserLogin(null, null)
             {
                 SteamID = configuration["FakeServices:SteamAuthenticationService:Data:SteamID"].ToULong(),
@@ -32,16 +29,16 @@ namespace SteamConsoleHelper.Services.Fakes
             };
         }
 
-        private LoginResult Login(string username, string password)
+        private LoginResult FakeLogin()
         {
-            _profileSettings.SetUserLogin(_fakeUserLogin);
-            ProfileSettings.SetIsAuthenticatedStatus(true);
+            Settings.SetUserLogin(_fakeUserLogin);
+            Settings.SetIsAuthenticatedStatus(true);
             return new LoginResult(SteamAuth.LoginResult.LoginOkay);
         }
 
         public Task InitiateLoginAsync()
         {
-            Login(null, null);
+            FakeLogin();
             return Task.CompletedTask;
         }
     }

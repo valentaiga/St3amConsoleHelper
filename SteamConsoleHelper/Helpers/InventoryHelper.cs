@@ -21,7 +21,7 @@ namespace SteamConsoleHelper.Helpers
 
         public static List<InventoryItem> FilterSentToMarketItems(this List<InventoryItem> inventoryItems, List<MarketListing> marketListings)
             => inventoryItems.FindAll(
-                x => !marketListings.Exists(y => x.AssetId == y.AssetId && x.ClassId == y.ClassId && x.MarketHashName == y.HashName));
+                x => !marketListings.Exists(y => y.AwaitingConfirmation && x.AssetId == y.AssetId && x.ClassId == y.ClassId && x.MarketHashName == y.HashName));
 
         public static List<(InventoryAssetResponseModel asset, InventoryDescriptionResponseModel description)> MapAssets(
             List<InventoryAssetResponseModel> assets,

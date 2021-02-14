@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SteamConsoleHelper.Abstractions;
+
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.ApiModels.Requests;
 using SteamConsoleHelper.ApiModels.Responses;
@@ -14,13 +14,11 @@ namespace SteamConsoleHelper.Services
 {
     public class InventoryService
     {
-        private readonly ProfileSettings _profileSettings;
         private readonly SteamUrlService _steamUrlService;
         private readonly WebRequestService _requestService;
 
-        public InventoryService(ProfileSettings profileSettings, SteamUrlService steamUrlService, WebRequestService requestService)
+        public InventoryService(SteamUrlService steamUrlService, WebRequestService requestService)
         {
-            _profileSettings = profileSettings;
             _steamUrlService = steamUrlService;
             _requestService = requestService;
         }
@@ -32,7 +30,7 @@ namespace SteamConsoleHelper.Services
         {
             var url = _steamUrlService.GrindItemIntoGemsUrl();
             var data = new GrindItemIntoGemsPostModel(
-                _profileSettings.SessionId,
+                Settings.SessionId,
                 appId,
                 assetId,
                 contextId);

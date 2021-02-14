@@ -17,18 +17,15 @@ namespace SteamConsoleHelper.Services
     {
         private readonly ILogger<SteamAuthenticationService> _logger;
         private readonly TelegramBotService _telegramBotService;
-        private readonly ProfileSettings _profileSettings;
 
         private UserLogin _userLogin;
 
         public SteamAuthenticationService(
             ILogger<SteamAuthenticationService> logger,
-            TelegramBotService telegramBotService,
-            ProfileSettings profileSettings)
+            TelegramBotService telegramBotService)
         {
             _logger = logger;
             _telegramBotService = telegramBotService;
-            _profileSettings = profileSettings;
         }
 
         public async Task InitiateLoginAsync()
@@ -73,9 +70,9 @@ namespace SteamConsoleHelper.Services
 
         private async Task<string> ReadLoginAsync()
         {
-            if (!string.IsNullOrEmpty(ProfileSettings.UserLogin?.Username))
+            if (!string.IsNullOrEmpty(Settings.UserLogin?.Username))
             {
-                return ProfileSettings.UserLogin.Username;
+                return Settings.UserLogin.Username;
             }
 
             return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your login: ");
@@ -83,9 +80,9 @@ namespace SteamConsoleHelper.Services
 
         private async ValueTask<string> ReadPasswordAsync()
         {
-            if (!string.IsNullOrEmpty(ProfileSettings.UserLogin?.Password))
+            if (!string.IsNullOrEmpty(Settings.UserLogin?.Password))
             {
-                return ProfileSettings.UserLogin.Password;
+                return Settings.UserLogin.Password;
             }
 
             return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your password: ");
@@ -171,8 +168,8 @@ namespace SteamConsoleHelper.Services
                 case LoginResult.LoginOkay:
                 {
                     ClearTwoFactorCode();
-                    ProfileSettings.SetIsAuthenticatedStatus(true);
-                    _profileSettings.SetUserLogin(_userLogin);
+                    Settings.SetIsAuthenticatedStatus(true);
+                    Settings.SetUserLogin(_userLogin);
                     return new InternalUserLogin(LoginResult.LoginOkay);
                 }
                 default:
