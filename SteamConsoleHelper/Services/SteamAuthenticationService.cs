@@ -18,7 +18,7 @@ namespace SteamConsoleHelper.Services
         private readonly ILogger<SteamAuthenticationService> _logger;
         private readonly TelegramBotService _telegramBotService;
 
-        private UserLogin _userLogin;
+        private static UserLogin _userLogin;
 
         public SteamAuthenticationService(
             ILogger<SteamAuthenticationService> logger,
