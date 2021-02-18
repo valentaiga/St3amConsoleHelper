@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,6 +21,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
     /// </summary>
     public class InventoryItemsProcessJob : ScheduledJobBase<InventoryItemsProcessJob>
     {
+        private const uint LogGemsAmount = 20_000;
         private const uint CardsAppId = 730;
 
         private readonly ILogger<InventoryItemsProcessJob> _logger;
@@ -105,15 +107,33 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
         private void OpenSacksOfGems(List<InventoryItem> inventoryItems)
         {
-            var sacks = inventoryItems
-                .FilterByType(ItemType.SackOfGems);
+            var gemsAmount = (uint)inventoryItems.FilterByType(ItemType.Gems).Sum(x => x.Amount);
+            _logger.LogDebug($"Total {gemsAmount} gems unpacked");
 
-            Parallel.ForEach(sacks, sack =>
-                _delayedExecutionPool.EnqueueTaskToPool(async () =>
+            // don't open more sacks than needed
+            if (gemsAmount > LogGemsAmount)
+            {
+                return;
+            }
+
+            var amountToOpen = LogGemsAmount - gemsAmount / 1000;
+
+            inventoryItems
+                .FilterByType(ItemType.SackOfGems)
+                .ForEach(sack =>
                 {
-                    _logger.LogDebug($"Opening sack of gems with {sack.Amount * 1000} gems");
-                    await _gemsService.GrindSackIntoGems(sack);
-                }));
+                    if (amountToOpen <= 0)
+                    {
+                        return;
+                    }
+
+                    amountToOpen -= sack.Amount;
+                    _delayedExecutionPool.EnqueueTaskToPool(async () =>
+                    {
+                        _logger.LogDebug($"Opening sack of gems with {sack.Amount * 1000} gems");
+                        await _gemsService.GrindSackIntoGems(sack, amountToOpen);
+                    });
+                });
         }
 
         private void UnpackBoosterPacks(List<InventoryItem> inventoryItems)

@@ -27,22 +27,24 @@ namespace SteamConsoleHelper.Services
             _webRequestService = webRequestService;
         }
 
-        public async Task GrindSackIntoGems(InventoryItem item)
+        public async Task GrindSackIntoGems(InventoryItem item, uint amount = 0)
         {
             if (item.ItemType != ItemType.SackOfGems)
             {
                 throw new InternalException(InternalError.InventoryItemIsNotASackOfGems);
             }
 
+            var amountToOpen = amount != 0 && amount <= item.Amount ? amount : item.Amount;
+
             var url = _steamUrlService.GrindSackToGemsUrl();
             var data = new GrindSackIntoGemsPostModel(
                 Settings.SessionId,
                 item.AppId,
                 item.AssetId,
-                item.Amount);
+                amountToOpen);
 
             await _webRequestService.PostRequestAsync(url, data);
-            _logger.LogDebug($"Ground sack of gems into '{item.Amount * 1000}' gems");
+            _logger.LogDebug($"Ground sack of gems into '{amountToOpen * 1000}' gems");
         }
 
         public async Task GrindItemIntoGems(InventoryItem item)
