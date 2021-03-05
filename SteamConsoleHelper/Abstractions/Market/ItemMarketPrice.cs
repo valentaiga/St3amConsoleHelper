@@ -2,7 +2,7 @@
 {
     public readonly struct ItemMarketPrice
     {
-        public uint AppId { get;}
+        public uint AppId { get; }
 
         public string HashName { get; }
 

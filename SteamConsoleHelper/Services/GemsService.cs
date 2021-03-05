@@ -1,10 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Runtime;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
 using SteamConsoleHelper.Abstractions.Enums;
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.ApiModels.Requests;
+using SteamConsoleHelper.ApiModels.Responses.Inventory;
 using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Exceptions;
 using SteamConsoleHelper.Resources;
@@ -58,6 +60,14 @@ namespace SteamConsoleHelper.Services
 
             await _webRequestService.PostRequestAsync(url, data);
             _logger.LogDebug($"Ground item '{item.MarketHashName}' into gems");
+        }
+
+        public async Task<uint> GetGemsForItemExchangeAsync(uint marketAppId, uint marketItemType)
+        {
+            var url = _steamUrlService.GetGemsForItemUrl(marketAppId, marketItemType);
+            var response = await _webRequestService.GetRequestAsync<GetGemsForItemExchangeResponseModel>(url);
+
+            return response.GooValue;
         }
     }
 }

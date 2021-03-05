@@ -24,6 +24,8 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
         private const uint LogGemsAmount = 20_000;
         private const uint CardsAppId = 730;
 
+        private int _grindItemsExecuteCounter = 6;
+
         private readonly ILogger<InventoryItemsProcessJob> _logger;
         private readonly SteamUrlService _steamUrlService;
         private readonly InventoryService _inventoryService;
@@ -64,6 +66,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
             UnpackBoosterPacks(inventoryItems);
             SellTradableCards(inventoryItems, sentToMarketCards);
+            await GrindItemsIntoGemsAsync(inventoryItems);
             OpenSacksOfGems(inventoryItems);
         }
 
@@ -116,7 +119,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                 return;
             }
 
-            var amountToOpen = LogGemsAmount - gemsAmount / 1000;
+            var amountToOpen = (LogGemsAmount - gemsAmount) / 1000;
 
             inventoryItems
                 .FilterByType(ItemType.SackOfGems)
@@ -147,17 +150,83 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                 {
                     _logger.LogInformation($"Opening booster pack '{pack.MarketHashName}' from '{pack.AppId}' game");
                     var cards = await _boosterPackService.UnpackBoosterAsync(pack.AppId, pack.AssetId);
-                    cards.ForEach(async x =>
+                    cards.ForEach(x =>
                     {
                         if (!x.IsFoil)
                         {
                             return;
                         }
-
-                        await _telegramBotService.SendMessageAsync($"New foil from '{pack.MarketName}' - '{x.Name}'{Environment.NewLine}{x.ImageUrl}");
+                        
                         _logger.LogInformation($"Got foil from '{pack.MarketName}' pack! Foil name - '{x.Name}'");
                     });
                 }));
+        }
+
+        private async ValueTask GrindItemsIntoGemsAsync(List<InventoryItem> inventoryItems)
+        {
+            // actually I dont want to move this method to separated job but we call this method every 30 mins
+            if (_grindItemsExecuteCounter++ < 3)
+            {
+                return;
+            }
+            
+            var potentialSellItems = inventoryItems
+                .FilterByTypes(ItemType.Emoticon, ItemType.ProfileBackground);
+
+            var distinctItems = potentialSellItems
+                .GroupBy(x => x.MarketHashName)
+                .Select(x => x.First())
+                .ToList();
+
+            var hashGemsDic = new Dictionary<string, bool>();
+            foreach (var item in distinctItems)
+            {
+                if (item.MarketItemType == null)
+                {
+                    hashGemsDic.Add(item.MarketHashName, false);
+                    continue;
+                }
+
+                try
+                {
+                    var gemsFromExchange =
+                        await _gemsService.GetGemsForItemExchangeAsync(item.MarketFeeApp, item.MarketItemType.Value);
+                    if (gemsFromExchange != 100)
+                    {
+                        hashGemsDic.Add(item.MarketHashName, false);
+                        continue;
+                    }
+
+                    var price = await _marketService.GetItemPriceAsync(item.AppId, item.MarketHashName);
+                    if (price.LowestPrice == null || price.LowestPrice > 3_00)
+                    {
+                        hashGemsDic.Add(item.MarketHashName, false);
+                        continue;
+                    }
+
+                    hashGemsDic.Add(item.MarketHashName, true);
+                    _logger.LogDebug($"Item with marketHashname '{item.MarketHashName}' added to gems grind pool (price: '{PriceHelper.ConvertToRubles(price.LowestPrice.Value)}')");
+                }
+                catch (Exception ex)
+                {
+                    hashGemsDic.Add(item.MarketHashName, false);
+                    _logger.LogError(ex, $"Unknown error, item marketHashname: '{item.MarketHashName}', instanceId: '{item.InstanceId}'");
+                }
+                finally
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+            }
+
+            Parallel.ForEach(potentialSellItems, x =>
+            {
+                if (hashGemsDic[x.MarketHashName])
+                {
+                    _delayedExecutionPool.EnqueueTaskToPool(async () => await _gemsService.GrindItemIntoGems(x));
+                }
+            });
+
+            _grindItemsExecuteCounter = 0;
         }
     }
 }

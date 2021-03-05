@@ -8,17 +8,17 @@ namespace SteamConsoleHelper.Common
 {
     public class HttpClientFactory
     {
+        private string InventoryUrl => Settings.ProfileUrl + "inventory";
+
         public HttpClient Create()
         {
-            var inventoryUrl = Settings.ProfileUrl + "inventory";
             var handler = new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
                 CookieContainer = new CookieContainer()
             };
-
-            handler.CookieContainer.Add(new Cookie("sessionid", Settings.SessionId, "/", "steamcommunity.com"));
-            handler.CookieContainer.Add(new Cookie("steamLoginSecure", Settings.SteamLoginSecure, "/", "steamcommunity.com"));
+            
+            Settings.UserLogin.Session.AddCookies(handler.CookieContainer);
 
             var client = new HttpClient(handler);
 

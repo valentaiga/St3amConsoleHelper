@@ -26,12 +26,9 @@ namespace SteamConsoleHelper.Resources
         public static string ProfileUrl { get; private set; }
 
         public static string SteamId => UserLogin?.Session.SteamID.ToString() 
-                                 ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
+                                        ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
         public static string SessionId => UserLogin?.Session.SessionID 
-                                   ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
-
-        public static string SteamLoginSecure => UserLogin?.Session.SteamLoginSecure 
                                           ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
         public static void SetUserLogin(UserLogin userLogin)

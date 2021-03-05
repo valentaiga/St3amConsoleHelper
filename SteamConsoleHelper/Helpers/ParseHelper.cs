@@ -104,5 +104,8 @@ namespace SteamConsoleHelper.Helpers
 
             return result;
         }
+
+        public static uint? ParseMarketItemType(string str)
+            => str?.Split(',')[3].ToUInt();
     }
 }

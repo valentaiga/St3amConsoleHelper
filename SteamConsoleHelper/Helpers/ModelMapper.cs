@@ -24,8 +24,11 @@ namespace SteamConsoleHelper.Helpers
 
         public static InventoryItem ToModel(this InventoryAssetResponseModel asset, InventoryDescriptionResponseModel description)
         {
-            var tagName = description.Tags?.Find(x => x.Category == "item_class")?.LocalizedTagName;
-            var type = ItemTypeIdentifier.ParseTypeFromDescription(tagName, description.MarketName);
+            var typeTagName = description.Tags?.Find(x => x.Category == "item_class")?.LocalizedTagName;
+            var type = ItemTypeIdentifier.ParseTypeFromDescription(typeTagName, description.MarketName);
+
+            var marketItemType = description.OwnerActions?.Find(x => x.Name == "Turn into Gems...")?.Link;
+            var marketItemTypeParsed = ParseHelper.ParseMarketItemType(marketItemType);
 
             return new InventoryItem(
                 description.Name,
@@ -43,6 +46,8 @@ namespace SteamConsoleHelper.Helpers
                 description.Marketable,
                 description.Commodity,
                 type,
+                description.MarketFeeApp,
+                marketItemTypeParsed,
                 description.Tags!.Select(x => x.ToModel()).ToList()
             );
         }
@@ -62,7 +67,7 @@ namespace SteamConsoleHelper.Helpers
                 listingDescription.AwaitingConfirmation);
         }
 
-        private static ItemTag ToModel(this ItemTagResponseModel response)
+        private static ItemTag ToModel(this InventoryDescriptionResponseModel.ItemTagResponseModel response)
         {
             return new ItemTag(
                 response.InternalName,

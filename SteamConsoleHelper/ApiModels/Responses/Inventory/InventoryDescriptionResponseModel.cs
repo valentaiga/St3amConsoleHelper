@@ -44,5 +44,29 @@ namespace SteamConsoleHelper.ApiModels.Responses.Inventory
 
         [JsonProperty("tags")]
         public List<ItemTagResponseModel> Tags { get; set; }
+
+        [JsonProperty("owner_actions")]
+        public List<OwnerActionResponseModel> OwnerActions { get; set; }
+
+        public class OwnerActionResponseModel
+        {
+            public string Link { get; set; }
+
+            public string Name { get; set; }
+        }
+
+        public class ItemTagResponseModel
+        {
+            public string Category { get; set; }
+
+            [JsonProperty("internal_name")]
+            public string InternalName { get; set; }
+
+            [JsonProperty("localized_category_name")]
+            public string LocalizedCategoryName { get; set; }
+
+            [JsonProperty("localized_tag_name")]
+            public string LocalizedTagName { get; set; }
+        }
     }
 }

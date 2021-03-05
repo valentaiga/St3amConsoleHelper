@@ -19,6 +19,12 @@ namespace SteamConsoleHelper.Helpers
         public static List<InventoryItem> FilterByType(this List<InventoryItem> inventoryItems, ItemType itemType)
             => inventoryItems.FindAll(x => x.ItemType == itemType);
 
+        public static List<InventoryItem> FilterByTypes(this List<InventoryItem> inventoryItems, params ItemType[] itemTypes)
+        {
+            var itemTypesList = itemTypes.ToList();
+            return inventoryItems.FindAll(x => itemTypesList.Contains(x.ItemType));
+        } 
+
         public static List<InventoryItem> FilterSentToMarketItems(this List<InventoryItem> inventoryItems, List<MarketListing> marketListings)
             => inventoryItems.FindAll(
                 x => !marketListings.Exists(y => y.AwaitingConfirmation && x.AssetId == y.AssetId && x.ClassId == y.ClassId && x.MarketHashName == y.HashName));

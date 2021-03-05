@@ -13,6 +13,8 @@ namespace SteamConsoleHelper.Telegram
 {
     public class TelegramBotService
     {
+        private static ChatId AuthorChatId { get; set; }
+
         private readonly ILogger<TelegramBotService> _logger;
         private readonly TelegramBotClient _telegramBotClient;
 
@@ -34,10 +36,6 @@ namespace SteamConsoleHelper.Telegram
         }
 
         private string LastMessage { get; set; }
-
-        private int AuthorId { get; set; }
-
-        private ChatId AuthorChatId { get; set; }
 
         public async Task SendMessageAsync(string text)
         {
@@ -75,16 +73,7 @@ namespace SteamConsoleHelper.Telegram
             var message = args.Message;
 
             // todo: store and read authorId and chatId in/from storage in initialization method
-            if (AuthorChatId == null)
-            {
-                AuthorId = message.From.Id;
-                AuthorChatId = new ChatId(message.Chat.Id);
-            }
-
-            if (message.From.Id != AuthorId)
-            {
-                return;
-            }
+            AuthorChatId ??= new ChatId(message.Chat.Id);
 
             if (message.Type != MessageType.Text)
             {

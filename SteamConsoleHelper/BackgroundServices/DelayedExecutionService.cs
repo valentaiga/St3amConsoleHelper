@@ -12,6 +12,7 @@ namespace SteamConsoleHelper.BackgroundServices
     public class DelayedExecutionService : BackgroundService
     {
         private static readonly TimeSpan ExecutionDelay = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan ExceptionDelay = TimeSpan.FromSeconds(0.5);
 
         private readonly ILogger<DelayedExecutionPool> _logger;
         private readonly DelayedExecutionPool _requestPool;
@@ -29,25 +30,36 @@ namespace SteamConsoleHelper.BackgroundServices
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                try
-                {
-                    var task = _requestPool.DequeueTaskFromPool();
-                    await task.Invoke();
-                }
-                catch (InternalException e)
-                {
-                    _logger.LogError(e.Message);
-                }
-                catch (Exception e)
-                {
-                    var errorText = e.ToString();
-                    _logger.LogError(errorText);
-                }
-                finally
-                {
-                    await Task.Delay(ExecutionDelay, stoppingToken);
-                }
+                await ProcessNextActionAsync(stoppingToken);
             }
+        }
+
+        private async Task ProcessNextActionAsync(CancellationToken stoppingToken)
+        {
+            var isException = false;
+            try
+            {
+                var task = _requestPool.DequeueTaskFromPool();
+                await task.Invoke();
+            }
+            catch (InternalException e)
+            {
+                _logger.LogError(e.Message);
+                isException = true;
+            }
+            catch (Exception e)
+            {
+                var errorText = e.ToString();
+                _logger.LogError(errorText);
+                isException = true;
+            }
+            finally
+            {
+                await Task.Delay(GetDelay(), stoppingToken);
+            }
+
+            TimeSpan GetDelay()
+                => isException ? ExceptionDelay : ExecutionDelay;
         }
     }
 }

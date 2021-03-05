@@ -37,9 +37,13 @@ namespace SteamConsoleHelper.Abstractions.Inventory
 
         public ItemType ItemType { get; }
 
+        public uint MarketFeeApp { get; }
+
+        public uint? MarketItemType { get; }
+
         public List<ItemTag> Tags { get; }
 
-        public InventoryItem(string name, string marketName, string marketHashName, uint appId, uint contextId, ulong assetId, ulong classId, ulong instanceId, uint amount, string type, string iconUrl, bool tradable, bool marketable, bool commodity, ItemType itemType, List<ItemTag> tags)
+        public InventoryItem(string name, string marketName, string marketHashName, uint appId, uint contextId, ulong assetId, ulong classId, ulong instanceId, uint amount, string type, string iconUrl, bool tradable, bool marketable, bool commodity, ItemType itemType, uint marketFeeApp, uint? marketItemType, List<ItemTag> tags)
         {
             Name = name;
             MarketName = marketName;
@@ -56,6 +60,8 @@ namespace SteamConsoleHelper.Abstractions.Inventory
             Marketable = marketable;
             Commodity = commodity;
             ItemType = itemType;
+            MarketFeeApp = marketFeeApp;
+            MarketItemType = marketItemType;
             Tags = tags;
         }
     }

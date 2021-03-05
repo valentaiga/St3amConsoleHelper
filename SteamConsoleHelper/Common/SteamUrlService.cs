@@ -1,10 +1,11 @@
-﻿using SteamConsoleHelper.Resources;
+﻿using System.Net;
+
+using SteamConsoleHelper.Resources;
 
 namespace SteamConsoleHelper.Common
 {
     public class SteamUrlService
     {
-        // 0 - steamId
         private const string GetGemsForItemBaseUrl = "https://steamcommunity.com/auction/ajaxgetgoovalueforitemtype/?appid={0}&item_type={1}&border_color=0";
         private const string GrindSackToGemsBaseUrl = "https://steamcommunity.com/id/{0}/ajaxexchangegoo/";
         private const string GrindItemIntoGemsBaseUrl = "https://steamcommunity.com/id/{0}/ajaxgrindintogoo/";
@@ -19,8 +20,8 @@ namespace SteamConsoleHelper.Common
         private const string GetMarketItemListingBaseUrl = "https://steamcommunity.com/market/listings/{0}/{1}";
         private const string CreateBuyOrderBaseUrl = "https://steamcommunity.com/market/createbuyorder/";
         private const string CancelBuyOrderBaseUrl = "https://steamcommunity.com/market/cancelbuyorder/";
-
-        public string GetGemsForItemUrl(uint appId, uint itemType) => string.Format(GetGemsForItemBaseUrl, appId, itemType);
+        
+        public string GetGemsForItemUrl(uint appId, ulong marketItemType) => string.Format(GetGemsForItemBaseUrl, appId, marketItemType);
 
         public string GrindSackToGemsUrl() => string.Format(GrindSackToGemsBaseUrl, Settings.UrlNickname);
 
@@ -30,7 +31,7 @@ namespace SteamConsoleHelper.Common
 
         public string GrindItemIntoGemsUrl() => string.Format(GrindItemIntoGemsBaseUrl, Settings.UrlNickname);
 
-        public string GetItemPriceUrl(uint appId, string hashName) => string.Format(GetItemPriceBaseUrl, appId, hashName);
+        public string GetItemPriceUrl(uint appId, string marketHashName) => string.Format(GetItemPriceBaseUrl, appId, WebUtility.UrlEncode(marketHashName));
 
         public string SellItemUrl() => SellItemBaseUrl;
 
@@ -42,7 +43,7 @@ namespace SteamConsoleHelper.Common
 
         public string GetNotificationsCountUrl() => GetNotificationsCountBaseUrl;
 
-        public string GetMarketItemListingUrl(uint appId, string marketHashName) => string.Format(GetMarketItemListingBaseUrl, appId, marketHashName);
+        public string GetMarketItemListingUrl(uint appId, string marketHashName) => string.Format(GetMarketItemListingBaseUrl, appId, WebUtility.UrlEncode(marketHashName));
 
         public string CreateBuyOrderUrl() => CreateBuyOrderBaseUrl;
 
