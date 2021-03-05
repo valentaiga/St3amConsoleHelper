@@ -8,7 +8,7 @@ namespace SteamConsoleHelper.Common
 {
     public class HttpClientFactory
     {
-        private string InventoryUrl => Settings.ProfileUrl + "inventory";
+        private static string InventoryUrl => Settings.ProfileUrl + "inventory";
 
         public HttpClient Create()
         {
@@ -25,7 +25,7 @@ namespace SteamConsoleHelper.Common
             client.DefaultRequestHeaders.Accept.ParseAdd("*/*");
             client.DefaultRequestHeaders.Connection.Add("keep-alive");
             client.DefaultRequestHeaders.Add("DNT", "1");
-            client.DefaultRequestHeaders.Referrer = new Uri(inventoryUrl);
+            client.DefaultRequestHeaders.Referrer = new Uri(InventoryUrl);
             client.DefaultRequestHeaders.Host = "steamcommunity.com";
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36");
             client.DefaultRequestHeaders.Add("Origin", "https://steamcommunity.com");
