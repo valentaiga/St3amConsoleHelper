@@ -35,11 +35,7 @@ namespace SteamConsoleHelper.Common
 
         public async ValueTask GetRequestAsync(string url, IEnumerable<(string name, string value)> parameters = null)
         {
-            if (!Settings.IsAuthenticated)
-            {
-                _logger.LogWarning("Request is failed, authentication tokens are invalid");
-                throw new InternalException(InternalError.UserIsNotAuthenticated);
-            }
+            CheckAuthenticatedStatus();
 
             var getUrl = url;
 
@@ -53,14 +49,25 @@ namespace SteamConsoleHelper.Common
             ValidateResponse(response);
         }
 
+        public async ValueTask<string> DownloadPageAsync(string url)
+        {
+            CheckAuthenticatedStatus();
+
+            using var httpClient = _httpClientFactory.Create();
+            var response = await httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InternalException(InternalError.SteamServicesAreBusy);
+            }
+
+            return await response.Content.ReadAsStringAsync();
+        }
+
         public async ValueTask<T> GetRequestAsync<T>(string url, IEnumerable<(string name, string value)> parameters = null)
             where T : SteamResponseBase
         {
-            if (!Settings.IsAuthenticated)
-            {
-                _logger.LogWarning("Request is failed, authentication tokens are invalid");
-                throw new InternalException(InternalError.UserIsNotAuthenticated);
-            }
+            CheckAuthenticatedStatus();
 
             var getUrl = url;
 
@@ -78,11 +85,7 @@ namespace SteamConsoleHelper.Common
         public async ValueTask<T> PostRequestAsync<T>(string url, object data)
             where T : SteamResponseBase
         {
-            if (!Settings.IsAuthenticated)
-            {
-                _logger.LogWarning("Request is failed, authentication tokens are invalid");
-                throw new InternalException(InternalError.UserIsNotAuthenticated);
-            }
+            CheckAuthenticatedStatus();
 
             var contentToPush = GetFormContent();
             
@@ -102,11 +105,7 @@ namespace SteamConsoleHelper.Common
 
         public async ValueTask PostRequestAsync(string url, object data)
         {
-            if (!Settings.IsAuthenticated)
-            {
-                _logger.LogWarning("Request is failed, authentication tokens are invalid");
-                throw new InternalException(InternalError.UserIsNotAuthenticated);
-            }
+            CheckAuthenticatedStatus();
 
             var contentToPush = GetFormContent();
             
@@ -164,6 +163,15 @@ namespace SteamConsoleHelper.Common
                 default:
                     _logger.LogError($"Unexpected error response: {response.StatusCode}:{response.ReasonPhrase}");
                     throw new InternalException(InternalError.UnexpectedError);
+            }
+        }
+
+        private void CheckAuthenticatedStatus()
+        {
+            if (!Settings.IsAuthenticated)
+            {
+                _logger.LogWarning("Request is failed, authentication tokens are invalid");
+                throw new InternalException(InternalError.UserIsNotAuthenticated);
             }
         }
     }

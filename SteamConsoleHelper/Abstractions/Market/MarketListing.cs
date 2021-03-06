@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace SteamConsoleHelper.Abstractions.Market
 {
+    [DebuggerDisplay("ListingId = {ListingId}, SellerPrice = {SellerPrice}, BuyerPrice = {BuyerPrice}, HashName = {HashName}")]
     public readonly struct MarketListing
     {
         public ulong ListingId { get; }

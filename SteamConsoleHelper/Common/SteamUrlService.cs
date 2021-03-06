@@ -10,6 +10,7 @@ namespace SteamConsoleHelper.Common
         private const string GrindSackToGemsBaseUrl = "https://steamcommunity.com/id/{0}/ajaxexchangegoo/";
         private const string GrindItemIntoGemsBaseUrl = "https://steamcommunity.com/id/{0}/ajaxgrindintogoo/";
         private const string UnpackBoosterBaseUrl = "https://steamcommunity.com/id/{0}/ajaxunpackbooster/";
+        private const string BoosterCreatorBaseUrl = "https://steamcommunity.com/tradingcards/boostercreator/";
         private const string CreateBoosterBaseUrl = "https://steamcommunity.com/tradingcards/ajaxcreatebooster/";
         private const string GetInventoryBaseUrl = "https://steamcommunity.com/inventory/{0}/753/6?l=english&count=5000";
         private const string SellItemBaseUrl = "https://steamcommunity.com/market/sellitem/";
@@ -26,6 +27,8 @@ namespace SteamConsoleHelper.Common
         public string GrindSackToGemsUrl() => string.Format(GrindSackToGemsBaseUrl, Settings.UrlNickname);
 
         public string UnpackBoosterUrl() => string.Format(UnpackBoosterBaseUrl, Settings.UrlNickname);
+
+        public string BoosterCreatorUrl() => BoosterCreatorBaseUrl;
 
         public string CreateBoosterUrl() => CreateBoosterBaseUrl;
 

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json;
 using SteamConsoleHelper.Abstractions.BoosterPack;
 using SteamConsoleHelper.ApiModels.Requests;
 using SteamConsoleHelper.ApiModels.Responses;
@@ -45,6 +45,15 @@ namespace SteamConsoleHelper.Services
                 appId);
 
             await _webRequestService.PostRequestAsync<SteamResponseBase>(url, data);
+        }
+
+        public async Task<List<BoosterGame>> GetGamesForCraftAsync()
+        {
+            var url = _steamUrlService.BoosterCreatorUrl();
+
+            var pageData = await _webRequestService.DownloadPageAsync(url);
+            var parsedJson = ParseHelper.ParseBoosterCreatorPage(pageData);
+            return JsonConvert.DeserializeObject<List<BoosterGame>>(parsedJson);
         }
     }
 }

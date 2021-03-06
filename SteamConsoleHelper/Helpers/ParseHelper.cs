@@ -15,6 +15,7 @@ namespace SteamConsoleHelper.Helpers
         private static readonly Regex ListingHoverRegex = new Regex(@"mylisting_([0-9]+)_name(['0-9]+), (['0-9])+, (['0-9])+, (['0-9])+");
         private static readonly Regex ListingDescriptionRegex = new Regex(@"(This is the price the buyer pays.{3}[,0-9]+.{89}[,0-9]+.{118}[0-9a-zA-Z ]+.{70}[0-9]+.{139}[0-9]+/[0-9a-zA-Z\.\-% ]+)|(My listings awaiting confirmation)");
         private static readonly Regex ListingDateRegex = new Regex(@"("">.+</)");
+        private static readonly Regex BoosterCreatorDataRegex = new Regex(@"(CBoosterCreatorPage.Init.+\]\,parse)");
         private static readonly Regex NotDigitsRegex = new Regex(@"[^0-9]+");
         private static readonly Regex SpecialSymbolsRegex = new Regex(@"(\r)*(\t)*(\n)*");
 
@@ -65,14 +66,14 @@ namespace SteamConsoleHelper.Helpers
                 var buyerPrice = ParsePrice(parameters[0])!.Value;
                 var sellerPrice = ParsePrice(parameters[1])!.Value;
                 var sellDateRegexValue = ListingDateRegex.Match(parameters[2]).Value;
-                var sellDate = sellDateRegexValue.Substring(2, sellDateRegexValue.IndexOf("<", StringComparison.Ordinal) - 2).ToDateTime();
+                var sellDate = sellDateRegexValue[2..sellDateRegexValue.IndexOf("<", StringComparison.Ordinal)].ToDateTime();
                 var listingId = parameters[3].KeepNumbersOnly().ToULong();
                 var hashName = HttpUtility.UrlDecode(parameters[5].Substring(parameters[5].LastIndexOf("/", StringComparison.Ordinal) + 1));
 
                 if (DateTime.Today.Month == 1 && sellDate.Month == 12)
                 {
                     // offset for new year prices
-                    sellDate.AddYears(-1);
+                    sellDate = sellDate.AddYears(-1);
                 }
 
                 return new ListingDescription(
@@ -107,5 +108,8 @@ namespace SteamConsoleHelper.Helpers
 
         public static uint? ParseMarketItemType(string str)
             => str?.Split(',')[3].ToUInt();
+
+        public static string ParseBoosterCreatorPage(string str)
+            => BoosterCreatorDataRegex.Match(str.RemoveSpecialSymbols()).Value[25..^6];
     }
 }
