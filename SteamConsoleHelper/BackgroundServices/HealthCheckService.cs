@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
 
-using SteamConsoleHelper.Abstractions.Fakes;
 using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Exceptions;
 using SteamConsoleHelper.Resources;
+using SteamConsoleHelper.Services;
 
 namespace SteamConsoleHelper.BackgroundServices
 {
@@ -18,11 +18,11 @@ namespace SteamConsoleHelper.BackgroundServices
     {
         private static readonly TimeSpan CheckDelay = TimeSpan.FromMinutes(1);
         
-        private readonly ISteamAuthenticationService _steamAuthenticationService;
+        private readonly SteamAuthenticationService _steamAuthenticationService;
         private readonly SteamUrlService _steamUrlService;
         private readonly WebRequestService _requestService;
 
-        public HealthCheckService(ISteamAuthenticationService steamAuthenticationService, SteamUrlService steamUrlService, WebRequestService requestService)
+        public HealthCheckService(SteamAuthenticationService steamAuthenticationService, SteamUrlService steamUrlService, WebRequestService requestService)
         {
             _steamAuthenticationService = steamAuthenticationService;
             _steamUrlService = steamUrlService;
@@ -43,7 +43,7 @@ namespace SteamConsoleHelper.BackgroundServices
                     if (ex.Error == InternalError.RequestBadRequest || ex.Error == InternalError.RequestUnauthorized || ex.Error == InternalError.UserIsNotAuthenticated)
                     {
                         Settings.SetIsAuthenticatedStatus(false);
-                        await _steamAuthenticationService.InitiateLoginAsync();
+                        await _steamAuthenticationService.InitializeLoginAsync();
                     }
                 }
                 await Task.Delay(CheckDelay, stoppingToken);

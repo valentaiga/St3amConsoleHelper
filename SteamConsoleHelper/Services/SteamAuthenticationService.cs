@@ -5,30 +5,33 @@ using Microsoft.Extensions.Logging;
 using SteamAuth;
 
 using SteamConsoleHelper.Abstractions.Enums;
-using SteamConsoleHelper.Abstractions.Fakes;
 using SteamConsoleHelper.Resources;
-using SteamConsoleHelper.Telegram;
+using SteamConsoleHelper.Services.Messenger;
+using SteamConsoleHelper.Storage;
 
 using InternalUserLogin = SteamConsoleHelper.Abstractions.Login.LoginResult;
 
 namespace SteamConsoleHelper.Services
 {
-    public class SteamAuthenticationService : ISteamAuthenticationService
+    public class SteamAuthenticationService
     {
+        private readonly IDataStoreService _storeService;
         private readonly ILogger<SteamAuthenticationService> _logger;
-        private readonly TelegramBotService _telegramBotService;
+        private readonly IMessageProvider _messageProvider;
 
         private static UserLogin _userLogin;
 
         public SteamAuthenticationService(
+            IDataStoreService storeService,
             ILogger<SteamAuthenticationService> logger,
-            TelegramBotService telegramBotService)
+            IMessageProvider messageProvider)
         {
+            _storeService = storeService;
             _logger = logger;
-            _telegramBotService = telegramBotService;
+            _messageProvider = messageProvider;
         }
 
-        public async Task InitiateLoginAsync()
+        public async Task InitializeLoginAsync()
         {
             // todo: store loginResult in file/storage and read it after restart instead of new login
             var login = await ReadLoginAsync();
@@ -47,7 +50,7 @@ namespace SteamConsoleHelper.Services
 
                 if (loginResult.IsTwoFactorNeeded)
                 {
-                    await _telegramBotService.SendMessageAsync($"Credentials are OK. But not signed in, reason: {loginResult.ErrorText}");
+                    await _messageProvider.SendMessageAsync($"Credentials are OK. But not signed in, reason: {loginResult.ErrorText}");
                     var steamGuardCode = await ReadTwoFactorAsync();
 
                     switch (loginResult.Result)
@@ -65,7 +68,7 @@ namespace SteamConsoleHelper.Services
                 }
             }
 
-            await _telegramBotService.SendMessageAsync("Successfully signed in");
+            await _messageProvider.SendMessageAsync("Successfully signed in");
         }
 
         private async Task<string> ReadLoginAsync()
@@ -75,7 +78,8 @@ namespace SteamConsoleHelper.Services
                 return Settings.UserLogin.Username;
             }
 
-            return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your login: ");
+            await _messageProvider.SendMessageAsync("Enter your login:");
+            return await _messageProvider.ReadMessageAsync();
         }
 
         private async ValueTask<string> ReadPasswordAsync()
@@ -85,12 +89,14 @@ namespace SteamConsoleHelper.Services
                 return Settings.UserLogin.Password;
             }
 
-            return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your password: ");
+            await _messageProvider.SendMessageAsync("Enter your password:");
+            return await _messageProvider.ReadMessageAsync();
         }
 
         private async Task<string> ReadTwoFactorAsync()
         {
-            return await _telegramBotService.SendMessageAndReadAnswerAsync("Enter your two factor code: ");
+            await _messageProvider.SendMessageAsync("Enter your two factor code:");
+            return await _messageProvider.ReadMessageAsync();
         }
 
         private async ValueTask<InternalUserLogin> LoginAsync(string username, string password)
@@ -146,7 +152,7 @@ namespace SteamConsoleHelper.Services
                                          _userLogin.CaptchaGID;
                         var message = $"Need to confirm captcha text in telegram : {captchaUrl}";
                         _logger.LogWarning(message);
-                        await _telegramBotService.SendMessageAsync(message);
+                        await _messageProvider.SendMessageAsync(message);
                         return new InternalUserLogin(result, message);
                     }
 
@@ -154,7 +160,7 @@ namespace SteamConsoleHelper.Services
                     {
                         var message = "Need to confirm mobile authenticator code text in telegram";
                         _logger.LogWarning(message);
-                        await _telegramBotService.SendMessageAsync(message);
+                        await _messageProvider.SendMessageAsync(message);
                         return new InternalUserLogin(result, message);
                     }
 
@@ -166,21 +172,41 @@ namespace SteamConsoleHelper.Services
                     return new InternalUserLogin(result, "Too many failed logins");
 
                 case LoginResult.LoginOkay:
-                {
-                    ClearTwoFactorCode();
-                    Settings.SetIsAuthenticatedStatus(true);
-                    Settings.SetUserLogin(_userLogin);
-                    return new InternalUserLogin(LoginResult.LoginOkay);
-                }
+                    {
+                        ClearTwoFactorCode();
+                        Settings.SetIsAuthenticatedStatus(true);
+                        Settings.SetUserLogin(_userLogin);
+                        await _storeService.SaveCredentialsAsync(_userLogin);
+                        return new InternalUserLogin(LoginResult.LoginOkay);
+                    }
                 default:
                     return new InternalUserLogin(result, "Unexpected login failure");
             }
 
-            void ClearTwoFactorCode()
+            static void ClearTwoFactorCode()
             {
                 // prevent using expired second factor
                 _userLogin.EmailCode = _userLogin.TwoFactorCode = _userLogin.CaptchaText = null;
+            }
         }
+
+        public async ValueTask InitializeAsync()
+        {
+            if (Settings.IsAuthenticated)
+            {
+                return;
+            }
+
+            var data = await _storeService.LoadJsonBlobAsync();
+            if (data.UserLogin.Username != null)
+            {
+                Settings.SetUserLogin(data.UserLogin);
+                Settings.SetIsAuthenticatedStatus(true);
+            }
+            else
+            {
+                await InitializeLoginAsync();
+            }
         }
     }
 }

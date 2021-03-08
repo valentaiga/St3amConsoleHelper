@@ -8,15 +8,12 @@ using Microsoft.Extensions.Hosting;
 
 using Serilog;
 
-using SteamConsoleHelper.Abstractions.Enums;
-using SteamConsoleHelper.Abstractions.Fakes;
 using SteamConsoleHelper.BackgroundServices;
 using SteamConsoleHelper.BackgroundServices.ScheduledJobs;
 using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Extensions;
-using SteamConsoleHelper.Resources;
+using SteamConsoleHelper.Initializers;
 using SteamConsoleHelper.Services;
-using SteamConsoleHelper.Services.Fakes;
 using SteamConsoleHelper.Telegram;
 using SteamConsoleHelper.Web;
 
@@ -66,19 +63,11 @@ namespace SteamConsoleHelper
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton<TelegramBotService>();
-                    if (FakeService.SteamAuthenticationService.IsFakeEnabled(Configuration))
-                    {
-                        services.AddSingleton<ISteamAuthenticationService, FakeSteamAuthenticationService>();
-                    }
-                    else
-                    {
-                        services.AddSingleton<ISteamAuthenticationService, SteamAuthenticationService>();
-                    }
-                    
-                    InitializeServices(services);
-
                     services
+                        .AddDataStoreService(Configuration)
+                        .AddMessageProvider(Configuration)
+                        .AddSingleton<SteamAuthenticationService>()
+                        .AddSingleton<TelegramBotService>()
                         .AddSingleton<HttpClientFactory>()
                         .AddTransient<SteamUrlService>()
                         .AddTransient<WebRequestService>()
@@ -90,23 +79,21 @@ namespace SteamConsoleHelper
                         .AddTransient<BoosterPackService>()
                         .AddTransient<GemsService>()
 
-                        // job services
-                        .AddSingleton<JobManager>()
-                        .AddHostedService<DelayedExecutionService>()
+                        .AddSingleton<JobManager>();
+
+                    InitializeServices(services);
+
+                    // jobs
+                    services.AddHostedService<DelayedExecutionService>()
                         .AddHostedService<HealthCheckService>()
-                        // jobs
                         .AddHostedService<CheckMarketPriceJob>()
                         .AddHostedService<InventoryItemsProcessJob>();
                 });
 
         private static void InitializeServices(IServiceCollection services)
         {
-            var provider = services.BuildServiceProvider();
-
-            provider.GetRequiredService<ISteamAuthenticationService>()
-                .InitiateLoginAsync().GetAwaiter().GetResult();
-                                                           
-            Settings.InitializeAsync().GetAwaiter().GetResult();
+            using var initializer = new Initializer(services);
+            initializer.Initialize();
         }
     }
 }

@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
+using SteamConsoleHelper.Storage;
+
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
@@ -16,11 +18,18 @@ namespace SteamConsoleHelper.Telegram
         private static ChatId AuthorChatId { get; set; }
 
         private readonly ILogger<TelegramBotService> _logger;
+        private readonly IDataStoreService _storeService;
         private readonly TelegramBotClient _telegramBotClient;
 
-        public TelegramBotService(ILogger<TelegramBotService> logger, IConfiguration configuration)
+        private string _lastMessage;
+
+        public TelegramBotService(
+            ILogger<TelegramBotService> logger, 
+            IDataStoreService storeService,
+            IConfiguration configuration)
         {
             _logger = logger;
+            _storeService = storeService;
 
             try
             {
@@ -35,8 +44,6 @@ namespace SteamConsoleHelper.Telegram
             }
         }
 
-        private string LastMessage { get; set; }
-
         public async Task SendMessageAsync(string text)
         {
             if (AuthorChatId != null)
@@ -50,30 +57,23 @@ namespace SteamConsoleHelper.Telegram
             _telegramBotClient.StartReceiving();
             _logger.LogInformation($"Awaiting user's answer...");
 
-            while (string.IsNullOrEmpty(LastMessage))
+            while (string.IsNullOrEmpty(_lastMessage))
             {
                 await Task.Delay(TimeSpan.FromSeconds(0.1));
             }
 
             _telegramBotClient.StopReceiving();
-            var result = LastMessage;
-            LastMessage = null;
+            var result = _lastMessage;
+            _lastMessage = null;
 
             return result;
-        }
-
-        public async Task<string> SendMessageAndReadAnswerAsync(string text)
-        {
-            await SendMessageAsync(text);
-            return await ReadMessageAsync();
         }
 
         private async void OnMessageHandler(object sender, MessageEventArgs args)
         {
             var message = args.Message;
 
-            // todo: store and read authorId and chatId in/from storage in initialization method
-            AuthorChatId ??= new ChatId(message.Chat.Id);
+            await SaveChatIdIfNeeded(message);
 
             if (message.Type != MessageType.Text)
             {
@@ -83,12 +83,29 @@ namespace SteamConsoleHelper.Telegram
             try
             {
                 await _telegramBotClient.DeleteMessageAsync(message.Chat.Id, message.MessageId);
-                LastMessage = message.Text;
+                _lastMessage = message.Text;
             }
             catch
             {
                 // sometimes message sent earlier and already deleted
             }
+        }
+
+        private async ValueTask SaveChatIdIfNeeded(Message msg)
+        {
+            if (AuthorChatId != null)
+            {
+                return;
+            }
+            
+            AuthorChatId = msg.Chat.Id;
+            await _storeService.SaveTelegramChat(msg.Chat.Id);
+        }
+
+        public async Task InitializeAsync()
+        {
+            var data = await _storeService.LoadJsonBlobAsync();
+            AuthorChatId = data.ChatId;
         }
     }
 }

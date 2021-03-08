@@ -1,7 +1,8 @@
 ﻿namespace SteamConsoleHelper.Abstractions.Enums
 {
-    public enum FakeService
+    public enum Feature
     {
-        SteamAuthenticationService,
+        Messenger,
+        DataStorage,
     }
 }

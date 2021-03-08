@@ -18,14 +18,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Services\Fakes\" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Include="..\.editorconfig" Link=".editorconfig" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\SteamConsoleHelper.Storage\SteamConsoleHelper.Storage.csproj" />
 	  <ProjectReference Include="..\SteamConsoleHelper.Telegram\SteamConsoleHelper.Telegram.csproj" />
 	</ItemGroup>
 

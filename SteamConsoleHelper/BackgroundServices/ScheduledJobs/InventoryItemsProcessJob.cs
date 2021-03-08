@@ -12,7 +12,7 @@ using SteamConsoleHelper.Abstractions.Market;
 using SteamConsoleHelper.Common;
 using SteamConsoleHelper.Helpers;
 using SteamConsoleHelper.Services;
-using SteamConsoleHelper.Telegram;
+using SteamConsoleHelper.Services.Messenger;
 
 namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 {
@@ -32,8 +32,8 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
         private readonly MarketService _marketService;
         private readonly BoosterPackService _boosterPackService;
         private readonly GemsService _gemsService;
-        private readonly TelegramBotService _telegramBotService;
         private readonly DelayedExecutionPool _delayedExecutionPool;
+        private readonly IMessageProvider _messageProvider;
 
         public InventoryItemsProcessJob(
             ILogger<InventoryItemsProcessJob> logger,
@@ -42,8 +42,8 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             MarketService marketService,
             BoosterPackService boosterPackService,
             GemsService gemsService,
-            TelegramBotService telegramBotService,
             DelayedExecutionPool delayedExecutionPool,
+            IMessageProvider messageProvider,
             JobManager jobManager)
             : base(logger, jobManager)
         {
@@ -53,8 +53,8 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             _marketService = marketService;
             _boosterPackService = boosterPackService;
             _gemsService = gemsService;
-            _telegramBotService = telegramBotService;
             _delayedExecutionPool = delayedExecutionPool;
+            _messageProvider = messageProvider;
 
             JobExecuteDelay = TimeSpan.FromMinutes(10);
         }
@@ -100,7 +100,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                     if (card.IsCardFoil())
                     {
                         var cardUrl = _steamUrlService.GetMarketItemListingUrl(CardsAppId, card.MarketHashName);
-                        await _telegramBotService.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{PriceHelper.ConvertToRubles(calculatedPrice)}' {Environment.NewLine}{cardUrl}");
+                        await _messageProvider.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{PriceHelper.ConvertToRubles(calculatedPrice)}' {Environment.NewLine}{cardUrl}");
                         _logger.LogInformation($"Sending foil '{card.MarketHashName}'. My price '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
                     }
 

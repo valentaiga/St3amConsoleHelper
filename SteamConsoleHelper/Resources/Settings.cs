@@ -18,17 +18,17 @@ namespace SteamConsoleHelper.Resources
         private const string DirectProfileUrl = "https://steamcommunity.com/profiles/{0}/";
 
         public static bool IsAuthenticated { get; private set; }
-        
+
         public static UserLogin UserLogin { get; private set; }
 
         public static string UrlNickname { get; private set; }
 
         public static string ProfileUrl { get; private set; }
 
-        public static string SteamId => UserLogin?.Session.SteamID.ToString() 
+        public static string SteamId => UserLogin?.Session.SteamID.ToString()
                                         ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
-        public static string SessionId => UserLogin?.Session.SessionID 
+        public static string SessionId => UserLogin?.Session.SessionID
                                           ?? throw new InternalException(InternalError.UserIsNotAuthenticated);
 
         public static void SetUserLogin(UserLogin userLogin)
@@ -36,12 +36,13 @@ namespace SteamConsoleHelper.Resources
 
         public static async Task InitializeAsync()
         {
-            var handler = new HttpClientHandler
+            using var handler = new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
                 CookieContainer = new CookieContainer()
             };
-            var httpClient = new HttpClient(handler);
+
+            using var httpClient = new HttpClient(handler);
 
             var url = string.Format(DirectProfileUrl, SteamId);
 
