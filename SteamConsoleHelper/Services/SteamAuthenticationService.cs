@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
@@ -31,85 +33,104 @@ namespace SteamConsoleHelper.Services
             _messageProvider = messageProvider;
         }
 
-        public async Task InitializeLoginAsync()
+        public async Task InitializeLoginAsync(CancellationToken stoppingToken)
         {
-            // todo: store loginResult in file/storage and read it after restart instead of new login
-            var login = await ReadLoginAsync();
-            var password = await ReadPasswordAsync();
-            var loginResult = await LoginAsync(login, password);
+            var login = await ReadLoginAsync(stoppingToken);
+            var password = await ReadPasswordAsync(stoppingToken);
+            var loginResult = await LoginAsync(login, password, stoppingToken);
 
             while (loginResult.IsError)
             {
-                _logger.LogInformation($"Login failed. Reason: '{loginResult.ErrorText}'");
-                if (loginResult.Result == LoginResult.BadCredentials || loginResult.Result == LoginResult.GeneralFailure)
+                if (stoppingToken.IsCancellationRequested)
                 {
-                    login = await ReadLoginAsync();
-                    password = await ReadPasswordAsync();
-                    loginResult = await LoginAsync(login, password);
+                    return;
                 }
 
-                if (loginResult.IsTwoFactorNeeded)
+                switch (loginResult.Result)
                 {
-                    await _messageProvider.SendMessageAsync($"Credentials are OK. But not signed in, reason: {loginResult.ErrorText}");
-                    var steamGuardCode = await ReadTwoFactorAsync();
-
-                    switch (loginResult.Result)
+                    case LoginResult.LoginOkay:
                     {
-                        case LoginResult.NeedCaptcha:
-                            loginResult = await LoginAsync(login, password, LoginType.ByCaptcha, steamGuardCode);
-                            break;
-                        case LoginResult.Need2FA:
-                            loginResult = await LoginAsync(login, password, LoginType.ByTwoFactor, steamGuardCode);
-                            break;
-                        case LoginResult.NeedEmail:
-                            loginResult = await LoginAsync(login, password, LoginType.ByEmail, steamGuardCode);
-                            break;
+                        await _messageProvider.SendMessageAsync("Successfully signed in", stoppingToken);
+                        break;
+                    }
+                    case LoginResult.TooManyFailedLogins:
+                    case LoginResult.GeneralFailure:
+                    {
+                        _logger.LogInformation($"Login failed. Reason: '{loginResult.ErrorText}'");
+                        return;
+                    }
+                    case LoginResult.BadRSA:
+                    {
+                        _logger.LogCritical("Steam authorization servers are down. Delayed for 30 secs");
+                        await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                        break;
+                    }
+                    case LoginResult.BadCredentials:
+                    {
+                        login = await ReadLoginAsync(stoppingToken);
+                        password = await ReadPasswordAsync(stoppingToken);
+                        loginResult = await LoginAsync(login, password, stoppingToken);
+                        break;
+                    }
+                    case LoginResult.NeedCaptcha:
+                    case LoginResult.Need2FA:
+                    case LoginResult.NeedEmail:
+                    {
+                        await _messageProvider.SendMessageAsync($"Credentials are OK. But not signed in, reason: {loginResult.ErrorText}", stoppingToken);
+                        var steamGuardCode = await ReadTwoFactorAsync(stoppingToken);
+
+                        loginResult = loginResult.Result switch
+                        {
+                            LoginResult.NeedCaptcha => await LoginAsync(login, password, LoginType.ByCaptcha, steamGuardCode, stoppingToken),
+                            LoginResult.Need2FA => await LoginAsync(login, password, LoginType.ByTwoFactor, steamGuardCode, stoppingToken),
+                            LoginResult.NeedEmail => await LoginAsync(login, password, LoginType.ByEmail, steamGuardCode, stoppingToken),
+                            _ => loginResult
+                        };
+                        break;
                     }
                 }
             }
-
-            await _messageProvider.SendMessageAsync("Successfully signed in");
         }
 
-        private async Task<string> ReadLoginAsync()
+        private async Task<string> ReadLoginAsync(CancellationToken stoppingToken)
         {
             if (!string.IsNullOrEmpty(Settings.UserLogin?.Username))
             {
                 return Settings.UserLogin.Username;
             }
 
-            await _messageProvider.SendMessageAsync("Enter your login:");
-            return await _messageProvider.ReadMessageAsync();
+            await _messageProvider.SendMessageAsync("Enter your login:", stoppingToken);
+            return await _messageProvider.ReadMessageAsync(stoppingToken);
         }
 
-        private async ValueTask<string> ReadPasswordAsync()
+        private async ValueTask<string> ReadPasswordAsync(CancellationToken stoppingToken)
         {
             if (!string.IsNullOrEmpty(Settings.UserLogin?.Password))
             {
                 return Settings.UserLogin.Password;
             }
 
-            await _messageProvider.SendMessageAsync("Enter your password:");
-            return await _messageProvider.ReadMessageAsync();
+            await _messageProvider.SendMessageAsync("Enter your password:", stoppingToken);
+            return await _messageProvider.ReadMessageAsync(stoppingToken);
         }
 
-        private async Task<string> ReadTwoFactorAsync()
+        private async Task<string> ReadTwoFactorAsync(CancellationToken stoppingToken)
         {
-            await _messageProvider.SendMessageAsync("Enter your two factor code:");
-            return await _messageProvider.ReadMessageAsync();
+            await _messageProvider.SendMessageAsync("Enter your two factor code:", stoppingToken);
+            return await _messageProvider.ReadMessageAsync(stoppingToken);
         }
 
-        private async ValueTask<InternalUserLogin> LoginAsync(string username, string password)
+        private async ValueTask<InternalUserLogin> LoginAsync(string username, string password, CancellationToken stoppingToken)
         {
             if (_userLogin?.Username != username || _userLogin?.Password != password)
             {
                 _userLogin = new UserLogin(username, password);
             }
 
-            return await DoLoginAsync();
+            return await DoLoginAsync(stoppingToken);
         }
 
-        private async ValueTask<InternalUserLogin> LoginAsync(string username, string password, LoginType loginType, string verificationValue)
+        private async ValueTask<InternalUserLogin> LoginAsync(string username, string password, LoginType loginType, string verificationValue, CancellationToken stoppingToken)
         {
             if (_userLogin?.Username != username || _userLogin?.Password != password)
             {
@@ -119,20 +140,26 @@ namespace SteamConsoleHelper.Services
             switch (loginType)
             {
                 case LoginType.ByEmail:
-                    _userLogin.EmailCode = verificationValue;
+                {
+                    _userLogin!.EmailCode = verificationValue;
                     break;
+                }
                 case LoginType.ByTwoFactor:
-                    _userLogin.TwoFactorCode = verificationValue;
+                {
+                    _userLogin!.TwoFactorCode = verificationValue;
                     break;
+                }
                 case LoginType.ByCaptcha:
-                    _userLogin.CaptchaText = verificationValue;
+                {
+                    _userLogin!.CaptchaText = verificationValue;
                     break;
+                }
             }
 
-            return await DoLoginAsync();
+            return await DoLoginAsync(stoppingToken);
         }
 
-        private async ValueTask<InternalUserLogin> DoLoginAsync()
+        private async ValueTask<InternalUserLogin> DoLoginAsync(CancellationToken stoppingToken)
         {
             var result = _userLogin.DoLogin();
 
@@ -152,7 +179,7 @@ namespace SteamConsoleHelper.Services
                                          _userLogin.CaptchaGID;
                         var message = $"Need to confirm captcha text in telegram : {captchaUrl}";
                         _logger.LogWarning(message);
-                        await _messageProvider.SendMessageAsync(message);
+                        await _messageProvider.SendMessageAsync(message, stoppingToken);
                         return new InternalUserLogin(result, message);
                     }
 
@@ -160,16 +187,12 @@ namespace SteamConsoleHelper.Services
                     {
                         var message = "Need to confirm mobile authenticator code text in telegram";
                         _logger.LogWarning(message);
-                        await _messageProvider.SendMessageAsync(message);
+                        await _messageProvider.SendMessageAsync(message, stoppingToken);
                         return new InternalUserLogin(result, message);
                     }
 
                 case LoginResult.BadCredentials:
-                case LoginResult.GeneralFailure:
                     return new InternalUserLogin(result, "Bad credentials");
-
-                case LoginResult.TooManyFailedLogins:
-                    return new InternalUserLogin(result, "Too many failed logins");
 
                 case LoginResult.LoginOkay:
                     {
@@ -179,6 +202,9 @@ namespace SteamConsoleHelper.Services
                         await _storeService.SaveCredentialsAsync(_userLogin);
                         return new InternalUserLogin(LoginResult.LoginOkay);
                     }
+                case LoginResult.GeneralFailure:
+                case LoginResult.BadRSA:
+                case LoginResult.TooManyFailedLogins:
                 default:
                     return new InternalUserLogin(result, "Unexpected login failure");
             }
@@ -205,7 +231,7 @@ namespace SteamConsoleHelper.Services
             }
             else
             {
-                await InitializeLoginAsync();
+                await InitializeLoginAsync(new CancellationToken());
             }
         }
     }

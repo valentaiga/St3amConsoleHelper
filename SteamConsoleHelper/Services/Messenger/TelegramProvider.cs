@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 using SteamConsoleHelper.Telegram;
 
@@ -13,14 +14,14 @@ namespace SteamConsoleHelper.Services.Messenger
             _telegramBotService = telegramBotService;
         }
 
-        public async Task SendMessageAsync(string message)
+        public async Task SendMessageAsync(string message, CancellationToken stoppingToken)
         {
-            await _telegramBotService.SendMessageAsync(message);
+            await _telegramBotService.SendMessageAsync(message, stoppingToken);
         }
 
-        public async Task<string> ReadMessageAsync()
+        public async Task<string> ReadMessageAsync(CancellationToken stoppingToken)
         {
-            return await _telegramBotService.ReadMessageAsync();
+            return await _telegramBotService.ReadMessageAsync(stoppingToken);
         }
     }
 }

@@ -44,24 +44,45 @@ namespace SteamConsoleHelper.Common
                 getUrl += "?" + string.Join("&", parameters.Select(x => $"{x.name}={x.value}"));
             }
 
-            using var httpClient = _httpClientFactory.Create();
-            var response = await httpClient.GetAsync(getUrl);
-            ValidateResponse(response);
+            try
+            {
+                using var httpClient = _httpClientFactory.Create();
+                var response = await httpClient.GetAsync(getUrl);
+                ValidateResponse(response);
+            }
+            catch (InternalException)
+            {
+                throw;
+            }
+            catch
+            {
+                throw new InternalException(InternalError.UnexpectedRequestError);
+            }
         }
 
         public async ValueTask<string> DownloadPageAsync(string url)
         {
             CheckAuthenticatedStatus();
 
-            using var httpClient = _httpClientFactory.Create();
-            var response = await httpClient.GetAsync(url);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                throw new InternalException(InternalError.SteamServicesAreBusy);
-            }
+                using var httpClient = _httpClientFactory.Create();
+                var response = await httpClient.GetAsync(url);
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new InternalException(InternalError.SteamServicesAreBusy);
+                }
 
-            return await response.Content.ReadAsStringAsync();
+                return await response.Content.ReadAsStringAsync();
+            }
+            catch (InternalException)
+            {
+                throw;
+            }
+            catch
+            {
+                throw new InternalException(InternalError.UnexpectedRequestError);
+            }
         }
 
         public async ValueTask<T> GetRequestAsync<T>(string url, IEnumerable<(string name, string value)> parameters = null)
@@ -75,11 +96,22 @@ namespace SteamConsoleHelper.Common
             {
                 getUrl += "?" + string.Join("&", parameters.Select(x => $"{x.name}={x.value}"));
             }
-            
-            using var httpClient = _httpClientFactory.Create();
-            var response = await httpClient.GetAsync(getUrl);
-            
-            return await DeserializeResponseAsync<T>(response);
+
+            try
+            {
+                using var httpClient = _httpClientFactory.Create();
+                var response = await httpClient.GetAsync(getUrl);
+
+                return await DeserializeResponseAsync<T>(response);
+            }
+            catch (InternalException)
+            {
+                throw;
+            }
+            catch
+            {
+                throw new InternalException(InternalError.UnexpectedRequestError);
+            }
         }
 
         public async ValueTask<T> PostRequestAsync<T>(string url, object data)
@@ -88,11 +120,22 @@ namespace SteamConsoleHelper.Common
             CheckAuthenticatedStatus();
 
             var contentToPush = GetFormContent();
-            
-            using var httpClient = _httpClientFactory.Create();
-            var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
 
-            return await DeserializeResponseAsync<T>(response);
+            try
+            {
+                using var httpClient = _httpClientFactory.Create();
+                var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
+
+                return await DeserializeResponseAsync<T>(response);
+            }
+            catch (InternalException)
+            {
+                throw;
+            }
+            catch
+            {
+                throw new InternalException(InternalError.UnexpectedRequestError);
+            }
 
             IEnumerable<KeyValuePair<string, string>> GetFormContent()
             {
@@ -108,11 +151,22 @@ namespace SteamConsoleHelper.Common
             CheckAuthenticatedStatus();
 
             var contentToPush = GetFormContent();
-            
-            using var httpClient = _httpClientFactory.Create();
-            var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
-            
-            ValidateResponse(response);
+
+            try
+            {
+                using var httpClient = _httpClientFactory.Create();
+                var response = await httpClient.PostAsync(url, new FormUrlEncodedContent(contentToPush));
+
+                ValidateResponse(response);
+            }
+            catch (InternalException)
+            {
+                throw;
+            }
+            catch
+            {
+                throw new InternalException(InternalError.UnexpectedRequestError);
+            }
 
             IEnumerable<KeyValuePair<string, string>> GetFormContent()
             {
@@ -168,11 +222,13 @@ namespace SteamConsoleHelper.Common
 
         private void CheckAuthenticatedStatus()
         {
-            if (!Settings.IsAuthenticated)
+            if (Settings.IsAuthenticated)
             {
-                _logger.LogWarning("Request is failed, authentication tokens are invalid");
-                throw new InternalException(InternalError.UserIsNotAuthenticated);
+                return;
             }
+
+            _logger.LogWarning("Request is failed, authentication tokens are invalid");
+            throw new InternalException(InternalError.UserIsNotAuthenticated);
         }
     }
 }

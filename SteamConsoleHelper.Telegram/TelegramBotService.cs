@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
@@ -44,22 +45,26 @@ namespace SteamConsoleHelper.Telegram
             }
         }
 
-        public async Task SendMessageAsync(string text)
+        public async Task SendMessageAsync(string text, CancellationToken stoppingToken)
         {
             if (AuthorChatId != null)
             {
-                await _telegramBotClient.SendTextMessageAsync(AuthorChatId, text);
+                await _telegramBotClient.SendTextMessageAsync(AuthorChatId, text, cancellationToken: stoppingToken);
             }
         }
 
-        public async Task<string> ReadMessageAsync()
+        public async Task<string> ReadMessageAsync(CancellationToken stoppingToken)
         {
-            _telegramBotClient.StartReceiving();
+            _telegramBotClient.StartReceiving(cancellationToken: stoppingToken);
             _logger.LogInformation($"Awaiting user's answer...");
 
             while (string.IsNullOrEmpty(_lastMessage))
             {
                 await Task.Delay(TimeSpan.FromSeconds(0.1));
+                if (stoppingToken.IsCancellationRequested)
+                {
+                    return null;
+                }
             }
 
             _telegramBotClient.StopReceiving();

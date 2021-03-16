@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace SteamConsoleHelper.Extensions
 {
@@ -20,5 +21,8 @@ namespace SteamConsoleHelper.Extensions
 
             return result.ToArray();
         }
+
+        public static string ToEncodedUrl(this string str)
+            => WebUtility.UrlEncode(str).Replace("+", "%20");
     }
 }

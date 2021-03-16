@@ -1,5 +1,5 @@
 ﻿using System.Net;
-
+using SteamConsoleHelper.Extensions;
 using SteamConsoleHelper.Resources;
 
 namespace SteamConsoleHelper.Common
@@ -34,7 +34,7 @@ namespace SteamConsoleHelper.Common
 
         public string GrindItemIntoGemsUrl() => string.Format(GrindItemIntoGemsBaseUrl, Settings.UrlNickname);
 
-        public string GetItemPriceUrl(uint appId, string marketHashName) => string.Format(GetItemPriceBaseUrl, appId, WebUtility.UrlEncode(marketHashName));
+        public string GetItemPriceUrl(uint appId, string marketHashName) => string.Format(GetItemPriceBaseUrl, appId, marketHashName.ToEncodedUrl());
 
         public string SellItemUrl() => SellItemBaseUrl;
 
@@ -46,7 +46,7 @@ namespace SteamConsoleHelper.Common
 
         public string GetNotificationsCountUrl() => GetNotificationsCountBaseUrl;
 
-        public string GetMarketItemListingUrl(uint appId, string marketHashName) => string.Format(GetMarketItemListingBaseUrl, appId, WebUtility.UrlEncode(marketHashName));
+        public string GetMarketItemListingUrl(uint appId, string marketHashName) => string.Format(GetMarketItemListingBaseUrl, appId, marketHashName.ToEncodedUrl());
 
         public string CreateBuyOrderUrl() => CreateBuyOrderBaseUrl;
 

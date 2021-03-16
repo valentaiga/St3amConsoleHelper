@@ -3,6 +3,7 @@
     public enum InternalError
     {
         UnexpectedError,
+        UnexpectedRequestError,
 
         RequestBadRequest,
         RequestUnauthorized,
@@ -11,9 +12,6 @@
         SteamServicesAreBusy,
         FailedToDeserializeResponse,
 
-        FailedToGetGamesFromCraftList,
-        FailedToAddGameToCraftList,
-        FailedToRemoveGameFromCraftList,
         InventoryItemIsNotACard,
         InventoryItemIsNotASackOfGems,
         UserIsNotAuthenticated

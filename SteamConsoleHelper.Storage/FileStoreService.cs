@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -57,20 +58,28 @@ namespace SteamConsoleHelper.Storage
 
         public async Task<DataBlob> LoadJsonBlobAsync()
         {
-            await using var fs = File.Open(DataBlobFileName, FileMode.OpenOrCreate);
-            using var reader = new StreamReader(fs);
+            try
+            {
+                await using var fs = File.Open(DataBlobFileName, FileMode.OpenOrCreate);
+                using var reader = new StreamReader(fs);
 
-            var json = await reader.ReadToEndAsync();
-            _logger.LogDebug($"Successfully loaded data json with {json.Length} chars in it");
+                var json = await reader.ReadToEndAsync();
+                _logger.LogDebug($"Successfully loaded data json with {json.Length} chars in it");
 
-            return string.IsNullOrEmpty(json) 
-                ? new DataBlob() 
-                : JsonConvert.DeserializeObject<DataBlob>(json);
+                return string.IsNullOrEmpty(json)
+                    ? new DataBlob()
+                    : JsonConvert.DeserializeObject<DataBlob>(json);
+            }
+            catch
+            {
+                _logger.LogError("Failed to read blob from disk. Returned empty blob.");
+                return new DataBlob();
+            }
         }
 
         private async Task SaveJsonBlobAsync(DataBlob dataBlob)
         {
-            await using var fs = File.Open(DataBlobFileName, FileMode.OpenOrCreate);
+            await using var fs = File.Open(DataBlobFileName, FileMode.Create);
             await using var writer = new StreamWriter(fs);
             var json = JsonConvert.SerializeObject(dataBlob);
             await writer.WriteAsync(json);

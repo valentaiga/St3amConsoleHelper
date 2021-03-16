@@ -22,7 +22,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
     public class InventoryItemsProcessJob : ScheduledJobBase<InventoryItemsProcessJob>
     {
         private const uint LogGemsAmount = 20_000;
-        private const uint CardsAppId = 730;
+        private const uint CardsAppId = 753;
 
         private int _grindItemsExecuteCounter = 6;
 
@@ -65,12 +65,12 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             var sentToMarketCards = await _marketService.GetAllMyListingsAsync();
 
             UnpackBoosterPacks(inventoryItems);
-            SellTradableCards(inventoryItems, sentToMarketCards);
+            SellTradableCards(inventoryItems, sentToMarketCards, cancellationToken);
             await GrindItemsIntoGemsAsync(inventoryItems);
             OpenSacksOfGems(inventoryItems);
         }
 
-        private void SellTradableCards(List<InventoryItem> inventoryItems, List<MarketListing> sentToMarketItems)
+        private void SellTradableCards(List<InventoryItem> inventoryItems, List<MarketListing> sentToMarketItems, CancellationToken cancellationToken)
         {
             var cardsToSell = inventoryItems
                 .FilterByMarketable()
@@ -99,8 +99,9 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
                     if (card.IsCardFoil())
                     {
+                        // bug: url is incorrect
                         var cardUrl = _steamUrlService.GetMarketItemListingUrl(CardsAppId, card.MarketHashName);
-                        await _messageProvider.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{PriceHelper.ConvertToRubles(calculatedPrice)}' {Environment.NewLine}{cardUrl}");
+                        await _messageProvider.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{PriceHelper.ConvertToRubles(calculatedPrice)}' {Environment.NewLine}{cardUrl}", cancellationToken);
                         _logger.LogInformation($"Sending foil '{card.MarketHashName}'. My price '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
                     }
 

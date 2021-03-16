@@ -43,7 +43,7 @@ namespace SteamConsoleHelper.BackgroundServices
                     if (ex.Error == InternalError.RequestBadRequest || ex.Error == InternalError.RequestUnauthorized || ex.Error == InternalError.UserIsNotAuthenticated)
                     {
                         Settings.SetIsAuthenticatedStatus(false);
-                        await _steamAuthenticationService.InitializeLoginAsync();
+                        await _steamAuthenticationService.InitializeLoginAsync(stoppingToken);
                     }
                 }
                 await Task.Delay(CheckDelay, stoppingToken);
