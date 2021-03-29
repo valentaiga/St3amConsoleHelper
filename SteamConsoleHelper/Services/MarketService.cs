@@ -106,7 +106,7 @@ namespace SteamConsoleHelper.Services
                 result.AddRange(listings);
             }
 
-            _logger.LogInformation($"Total '{result.Count}' items on market");
+            _logger.LogInformation($"Total '{result.Count}' items on market, '{result.FindAll(x => x.AwaitingConfirmation).Count}' of them awaiting confirmation");
 
             return result;
         }

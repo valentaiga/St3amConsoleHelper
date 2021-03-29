@@ -215,7 +215,7 @@ namespace SteamConsoleHelper.Common
                 case HttpStatusCode.NotFound:
                     throw new InternalException(InternalError.RequestNotFound);
                 default:
-                    _logger.LogError($"Unexpected error response: {response.StatusCode}:{response.ReasonPhrase}");
+                    _logger.LogError($"Unexpected error response: {(int)response.StatusCode}:{response.ReasonPhrase}");
                     throw new InternalException(InternalError.UnexpectedError);
             }
         }

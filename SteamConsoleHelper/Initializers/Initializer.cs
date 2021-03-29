@@ -34,10 +34,10 @@ namespace SteamConsoleHelper.Initializers
             await Settings.InitializeAsync();
         }
 
-        private ValueTask InitializeSteamAuthenticationAsync(ServiceProvider serviceProvider)
+        private static ValueTask InitializeSteamAuthenticationAsync(IServiceProvider serviceProvider)
             => serviceProvider.GetRequiredService<SteamAuthenticationService>().InitializeAsync();
 
-        private Task InitializeTelegramAsync(ServiceProvider serviceProvider)
+        private static Task InitializeTelegramAsync(IServiceProvider serviceProvider)
             => serviceProvider.GetRequiredService<TelegramBotService>().InitializeAsync();
 
         public void Dispose()

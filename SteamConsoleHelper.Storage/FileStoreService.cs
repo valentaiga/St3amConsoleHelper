@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,7 +31,7 @@ namespace SteamConsoleHelper.Storage
             try
             {
                 var dataBlob = await LoadJsonBlobAsync();
-                dataBlob.UserLogin = userLogin;
+                dataBlob.UserLoginProxy = new UserLoginProxy(userLogin);
                 await SaveJsonBlobAsync(dataBlob);
             }
             finally
@@ -41,7 +40,13 @@ namespace SteamConsoleHelper.Storage
             }
         }
 
-        public async Task SaveTelegramChat(long chatId)
+        public async Task<UserLogin> GetCredentialsAsync()
+        {
+            var blob = await LoadJsonBlobAsync();
+            return blob.UserLoginProxy?.CastToOrigin();
+        }
+
+        public async Task SaveTelegramChatIdAsync(long chatId)
         {
             Locker.WaitOne();
             try
@@ -56,7 +61,13 @@ namespace SteamConsoleHelper.Storage
             }
         }
 
-        public async Task<DataBlob> LoadJsonBlobAsync()
+        public async Task<long?> GetTelegramChatIdAsync()
+        {
+            var blob = await LoadJsonBlobAsync();
+            return blob.ChatId;
+        } 
+
+        private async Task<DataBlob> LoadJsonBlobAsync()
         {
             try
             {

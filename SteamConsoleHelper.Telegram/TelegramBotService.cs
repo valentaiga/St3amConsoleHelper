@@ -104,13 +104,12 @@ namespace SteamConsoleHelper.Telegram
             }
             
             AuthorChatId = msg.Chat.Id;
-            await _storeService.SaveTelegramChat(msg.Chat.Id);
+            await _storeService.SaveTelegramChatIdAsync(msg.Chat.Id);
         }
 
         public async Task InitializeAsync()
         {
-            var data = await _storeService.LoadJsonBlobAsync();
-            AuthorChatId = data.ChatId;
+            AuthorChatId = await _storeService.GetTelegramChatIdAsync();
         }
     }
 }

@@ -27,7 +27,7 @@ namespace SteamConsoleHelper.BackgroundServices
             var actionsCount = _actionsQueue.Count;
             if (actionsCount > 0)
             {
-                _logger.LogInformation($"'{actionsCount}' more actions in queue");
+                _logger.LogDebug($"'{actionsCount}' more actions in queue");
             }
 
             var success = _actionsQueue.TryDequeue(out var action) && action != null;

@@ -1,11 +1,9 @@
-﻿using SteamAuth;
-
-namespace SteamConsoleHelper.Storage.Models
+﻿namespace SteamConsoleHelper.Storage.Models
 {
-    public class DataBlob
+    internal class DataBlob
     {
-        public UserLogin UserLogin { get; set; } = new UserLogin(null, null);
+        public UserLoginProxy UserLoginProxy { get; set; }
 
-        public long? ChatId { get; set; } = null;
+        public long? ChatId { get; set; }
     }
 }

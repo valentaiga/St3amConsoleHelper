@@ -2,8 +2,6 @@
 
 using SteamAuth;
 
-using SteamConsoleHelper.Storage.Models;
-
 namespace SteamConsoleHelper.Storage
 {
     public class FakeDataStoreService : IDataStoreService
@@ -13,14 +11,19 @@ namespace SteamConsoleHelper.Storage
             return Task.CompletedTask;
         }
 
-        public Task SaveTelegramChat(long chatId)
+        public Task<long?> GetTelegramChatIdAsync()
+        {
+            return Task.FromResult<long?>(null);
+        }
+
+        public Task SaveTelegramChatIdAsync(long chatId)
         {
             return Task.CompletedTask;
         }
 
-        public Task<DataBlob> LoadJsonBlobAsync()
+        public Task<UserLogin> GetCredentialsAsync()
         {
-            return Task.FromResult(new DataBlob());
+            return Task.FromResult(new UserLogin(null, null));
         }
     }
 }

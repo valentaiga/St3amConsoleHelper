@@ -49,10 +49,7 @@ namespace SteamConsoleHelper.Services
                 switch (loginResult.Result)
                 {
                     case LoginResult.LoginOkay:
-                    {
-                        await _messageProvider.SendMessageAsync("Successfully signed in", stoppingToken);
                         break;
-                    }
                     case LoginResult.TooManyFailedLogins:
                     case LoginResult.GeneralFailure:
                     {
@@ -90,6 +87,8 @@ namespace SteamConsoleHelper.Services
                     }
                 }
             }
+
+            await _messageProvider.SendMessageAsync("Successfully signed in", stoppingToken);
         }
 
         private async Task<string> ReadLoginAsync(CancellationToken stoppingToken)
@@ -223,10 +222,10 @@ namespace SteamConsoleHelper.Services
                 return;
             }
 
-            var data = await _storeService.LoadJsonBlobAsync();
-            if (data.UserLogin.Username != null)
+            var credentials = await _storeService.GetCredentialsAsync();
+            if (credentials != null)
             {
-                Settings.SetUserLogin(data.UserLogin);
+                Settings.SetUserLogin(credentials);
                 Settings.SetIsAuthenticatedStatus(true);
             }
             else

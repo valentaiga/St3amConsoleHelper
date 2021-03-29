@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using SteamConsoleHelper.Abstractions.Inventory;
 using SteamConsoleHelper.ApiModels.Requests;
 using SteamConsoleHelper.ApiModels.Responses;
@@ -14,11 +16,13 @@ namespace SteamConsoleHelper.Services
 {
     public class InventoryService
     {
+        private readonly ILogger<InventoryService> _logger;
         private readonly SteamUrlService _steamUrlService;
         private readonly WebRequestService _requestService;
 
-        public InventoryService(SteamUrlService steamUrlService, WebRequestService requestService)
+        public InventoryService(ILogger<InventoryService> logger, SteamUrlService steamUrlService, WebRequestService requestService)
         {
+            _logger = logger;
             _steamUrlService = steamUrlService;
             _requestService = requestService;
         }
@@ -46,6 +50,8 @@ namespace SteamConsoleHelper.Services
             var result = InventoryHelper.MapAssets(responseModel.Assets, responseModel.Descriptions)
                 .Select(x => x.asset.ToModel(x.description))
                 .ToList();
+
+            _logger.LogInformation($"Total items in inventory: '{result.Count}'");
 
             return result;
         }

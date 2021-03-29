@@ -66,8 +66,8 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
             UnpackBoosterPacks(inventoryItems);
             SellTradableCards(inventoryItems, sentToMarketCards, cancellationToken);
-            await GrindItemsIntoGemsAsync(inventoryItems);
             OpenSacksOfGems(inventoryItems);
+            await GrindItemsIntoGemsAsync(inventoryItems);
         }
 
         private void SellTradableCards(List<InventoryItem> inventoryItems, List<MarketListing> sentToMarketItems, CancellationToken cancellationToken)
@@ -99,10 +99,9 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
                     if (card.IsCardFoil())
                     {
-                        // bug: url is incorrect
                         var cardUrl = _steamUrlService.GetMarketItemListingUrl(CardsAppId, card.MarketHashName);
-                        await _messageProvider.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{PriceHelper.ConvertToRubles(calculatedPrice)}' {Environment.NewLine}{cardUrl}", cancellationToken);
-                        _logger.LogInformation($"Sending foil '{card.MarketHashName}'. My price '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
+                        await _messageProvider.SendMessageAsync($"Sent to market foil: '{card.MarketName}' - '{PriceHelper.ConvertToRubles(price.LowestPrice.Value)}' {Environment.NewLine}{cardUrl}", cancellationToken);
+                        _logger.LogDebug($"Sending foil '{card.MarketHashName}'. My price '{calculatedPrice}', lowest price '{price.LowestPrice}', median price '{price.MedianPrice}'");
                     }
 
                     await _marketService.SellItemAsync(card, calculatedPrice);
@@ -122,9 +121,9 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
 
             var amountToOpen = (LogGemsAmount - gemsAmount) / 1000;
 
-            inventoryItems
-                .FilterByType(ItemType.SackOfGems)
-                .ForEach(sack =>
+            var sacksOfGems = inventoryItems.FilterByType(ItemType.SackOfGems);
+
+            Parallel.ForEach(sacksOfGems, sack =>
                 {
                     if (amountToOpen <= 0)
                     {
@@ -149,7 +148,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             Parallel.ForEach(packsToOpen, pack =>
                 _delayedExecutionPool.EnqueueTaskToPool(async () =>
                 {
-                    _logger.LogInformation($"Opening booster pack '{pack.MarketHashName}' from '{pack.AppId}' game");
+                    _logger.LogDebug($"Opening booster pack '{pack.MarketHashName}' from '{pack.AppId}' game");
                     var cards = await _boosterPackService.UnpackBoosterAsync(pack.AppId, pack.AssetId);
                     cards.ForEach(x =>
                     {
@@ -157,7 +156,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                         {
                             return;
                         }
-                        
+
                         _logger.LogInformation($"Got foil from '{pack.MarketName}' pack! Foil name - '{x.Name}'");
                     });
                 }));
@@ -168,9 +167,10 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
             // actually I dont want to move this method to separated job but we call this method every 30 mins
             if (_grindItemsExecuteCounter++ < 3)
             {
+                _logger.LogDebug("Skipped grind items action");
                 return;
             }
-            
+
             var potentialSellItems = inventoryItems
                 .FilterByTypes(ItemType.Emoticon, ItemType.ProfileBackground);
 
@@ -178,6 +178,7 @@ namespace SteamConsoleHelper.BackgroundServices.ScheduledJobs
                 .GroupBy(x => x.MarketHashName)
                 .Select(x => x.First())
                 .ToList();
+            _logger.LogDebug($"Potential items to grind: '{potentialSellItems.Count}', distinct items: '{distinctItems.Count}'");
 
             var hashGemsDic = new Dictionary<string, bool>();
             foreach (var item in distinctItems)
